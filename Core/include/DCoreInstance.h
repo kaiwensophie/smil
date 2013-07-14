@@ -40,6 +40,10 @@
 
 #include "private/DInstance.hpp"
 
+#ifdef USE_OPEN_CL
+#include "DGpu.h"
+#endif // USE_OPEN_CL
+
 namespace smil
 {
     class BaseObject;
@@ -82,6 +86,11 @@ namespace smil
 	
 	Signal onBaseImageCreated;
 	
+#ifdef USE_OPEN_CL
+	GpuContext& getGpuContext() { return gpuContext; }
+    protected:
+	GpuContext gpuContext;
+#endif // USE_OPEN_CL
       
     protected:
 	UINT threadNumber;

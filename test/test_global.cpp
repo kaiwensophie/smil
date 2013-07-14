@@ -75,6 +75,9 @@ int main(int argc, char *argv[])
 //     
 //     im3->printSelf();
     im1.show();
+    
+    GpuContext &gpu = Core::getInstance()->getGpuContext();
+    cout << gpu.getDeviceName() << endl;
 //     
 //     Gui::execLoop();
 
