@@ -208,11 +208,10 @@ class swig_cdecl(swigXmlObj):
       return ""
     elif self.kind=="variable":
       return ""
+    elif self.kind=="variable":
+      return ""
     else:
-      buf = self.ret_type + self.sym_name
-      buf += "(" + self.args + ")" + self.suffix + "\n"
-      buf += self.code + "\n"
-      return buf
+      return ""
 
 #### PARAMETER LIST ####  
 class swig_parmlist(swigXmlObj):
@@ -241,9 +240,18 @@ class swig_template_function(swig_cdecl):
       self.swigType = "template_function"
       self.specialization = hasattr(self, "specialization")
   def getDeclaration(self, tab=""):
-    return ""
+    return "templ decl " + self.name + "\n"
   def getDefinition(self, tab=""):
-    return ""
+    #if not self.specialization:
+      #return ""
+    className = ""
+    buf = "template <>\n"
+    if self.ismember:
+      className = self.parent.name + "::"
+    buf += self.ret_type + className + self.name
+    buf += "(" + self.args + ")" + self.suffix + "\n"
+    buf += self.code + "\n"
+    return buf
       
 
 #### CLASS ####
@@ -260,7 +268,8 @@ class swig_class(swigXmlObj):
     buf += tab + "};\n"
     return buf
   def getDefinition(self, tab=""):
-    return ""
+    buf = "/// " + self.name + "\n"
+    return buf + self.childrenDefinition(tab)
   
 #### ACCESS (CLASS) ####
 class swig_access(swigXmlObj):
@@ -317,7 +326,7 @@ class swig_template_class(swig_class):
 #### TEMPLATE (CLASS OR FUNCTION) ####
 def swig_template(xmlNode, parent=None):
   obj = swigXmlObj(xmlNode, parent, recursive=False)
-  print obj.name, obj.templatetype, hasattr(obj, "specialization")
+  #print obj.name, obj.templatetype, hasattr(obj, "specialization")
   if obj.templatetype=="class":
     return swig_template_class(xmlNode, parent)
   elif obj.templatetype=="cdecl":
@@ -349,6 +358,14 @@ class swig_enumitem(swigXmlObj):
     if hasattr(self, "enumvalue"):
       buf += "=" + self.enumvalue
     return buf
+
+#### EXTEND ####
+class swig_extend(swigXmlObj):    
+  def getDeclaration(self, tab=""):
+    return ""
+  def getDefinition(self, tab=""):
+    return ""
+
 
 #### TYPE ####
 def decodeType(arg):
@@ -402,7 +419,7 @@ def main():
     outHeaderFile = args[3]
     swigFileName = libName + ".i"
 
-    xmlFileName = "/home/mat/src/Smil/build/Core/smilCore_wrap.xml"
+    xmlFileName = "/home/faessel/src/Smil/build/Core/smilCore_wrap.xml"
     
     global doc, rootNode, swigXmlRoot, swigXmlInc, mod, inc, decls, defs, swigMod
     
