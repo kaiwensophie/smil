@@ -40,6 +40,13 @@
 #include "Core/include/private/DImage.hpp"
 #include "IO/include/DCommonIO.h"
 
+#undef __DEPRECATED
+
+#include <vtkImageData.h>
+#include <vtkStructuredPoints.h>
+#include <vtkStructuredPointsReader.h>
+#include <vtkStructuredPointsWriter.h>
+
 using namespace std;
 
 
@@ -156,6 +163,23 @@ namespace smil
 	    typename Image<T>::sliceType curSlice;
 	    typename Image<T>::lineType curLine;
 	    
+	    vtkStructuredPointsReader *reader = vtkStructuredPointsReader::New();
+	    vtkStructuredPoints *imData = vtkStructuredPoints::New();
+	    imData->SetExtent(0, width-1, 0, height-1, 0, depth-1);
+// 	    imData->AllocateScalars();
+	    reader->SetOutput(imData);
+	    reader->SetFileName(filename);
+	    reader->Update();
+	    
+	    vtkStructuredPointsWriter *writer = vtkStructuredPointsWriter::New();
+	    writer->SetInput(reader->GetOutput());
+	    writer->SetFileName("/home/faessel/tmp/tmp.vtk");
+	    writer->SetFileTypeToBinary();
+	    writer->Write();
+	    
+	    fp.close();
+	    return RES_OK;
+	    
 	    // Return to the begining of the data
 	    fp.seekg(hStruct.startPos);
 	    
@@ -191,7 +215,7 @@ namespace smil
 		    for (int y=height-1;y>=0;y--)
 		    {
 			curLine = curSlice[y];
-			fp.read((char*)curLine, sizeof(T)*width);
+			fp.read((char*)curLine, sizeof(double)*width);
 		    }
 		}
 	    }
