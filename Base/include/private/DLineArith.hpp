@@ -102,7 +102,7 @@ namespace smil
     struct invLine : public unaryLineFunctionBase<T>
     {
 	typedef typename Image<T>::lineType lineType;
-	inline void _exec(lineType lineIn, size_t size, lineType lOut)
+	inline void _exec(const lineType lineIn, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++) lOut[i] = ~lineIn[i];
 	}
@@ -131,7 +131,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] > (T)(ImDtTypes<T>::max()- lIn2[i]) ? ImDtTypes<T>::max() : lIn1[i] + lIn2[i];
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] > (T)(ImDtTypes<T>::max()- value) ? ImDtTypes<T>::max() : lIn1[i] + value;
@@ -147,7 +147,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] + lIn2[i];
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] + value;
@@ -163,7 +163,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] < (T)(ImDtTypes<T>::min() + lIn2[i]) ? ImDtTypes<T>::min() : lIn1[i] - lIn2[i];
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] < (T)(ImDtTypes<T>::min() + value) ? ImDtTypes<T>::min() : lIn1[i] - value;
@@ -179,7 +179,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] - lIn2[i];
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] - value;
@@ -190,12 +190,12 @@ namespace smil
     struct supLine : public binaryLineFunctionBase<T>
     {
 	typedef typename Image<T>::lineType lineType;
-	inline void _exec(lineType lIn1, lineType lIn2, size_t size, lineType lOut)
+	inline void _exec(const lineType lIn1, const lineType lIn2, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] > lIn2[i] ? lIn1[i] : lIn2[i];
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(const lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] > value ? lIn1[i] : value;
@@ -206,12 +206,12 @@ namespace smil
     struct infLine : public binaryLineFunctionBase<T>
     {
 	typedef typename Image<T>::lineType lineType;
-	inline void _exec(lineType lIn1, lineType lIn2, size_t size, lineType lOut)
+	inline void _exec(const lineType lIn1, const lineType lIn2, const size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] < lIn2[i] ? lIn1[i] : lIn2[i];
 	}
-	inline void _exec(const lineType lIn1, const T value, size_t size, lineType lOut)
+	inline void _exec(const lineType lIn1, const T value, const size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] < value ? lIn1[i] : value;
@@ -232,7 +232,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] > lIn2[i] ? trueVal : falseVal;
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] > value ? trueVal : falseVal;
@@ -253,7 +253,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] |= lIn1[i] > lIn2[i] ? trueVal : falseVal;
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] |= lIn1[i] > value ? trueVal : falseVal;
@@ -279,7 +279,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] >= lIn2[i] ? trueVal : falseVal;
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] >= value ? trueVal : falseVal;
@@ -300,7 +300,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] |= lIn1[i] >= lIn2[i] ? trueVal : falseVal;
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] |= lIn1[i] >= value ? trueVal : falseVal;
@@ -326,7 +326,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] < lIn2[i] ? trueVal : falseVal;
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] < value ? trueVal : falseVal;
@@ -347,7 +347,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] |= lIn1[i] < lIn2[i] ? trueVal : falseVal;
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] |= lIn1[i] < value ? trueVal : falseVal;
@@ -373,7 +373,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] <= lIn2[i] ? trueVal : falseVal;
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] <= value ? trueVal : falseVal;
@@ -394,7 +394,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] |= lIn1[i] <= lIn2[i] ? trueVal : falseVal;
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] |= lIn1[i] <= value ? trueVal : falseVal;
@@ -421,7 +421,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] == lIn2[i] ? trueVal : falseVal;
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] == value ? trueVal : falseVal;
@@ -442,7 +442,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] == lIn2[i] ? falseVal : trueVal;
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] == value ? falseVal : trueVal;
@@ -463,7 +463,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] |= lIn1[i] == lIn2[i] ? trueVal : falseVal;
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] |= lIn1[i] == value ? trueVal : falseVal;
@@ -491,7 +491,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] > lIn2[i] ? lIn1[i]-lIn2[i] : lIn2[i]-lIn1[i];
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] > value ? lIn1[i]-value : value-lIn1[i];
@@ -524,7 +524,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = (T)(lIn1[i] * lIn2[i]);
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = (T)(lIn1[i] * value);
@@ -540,7 +540,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn2[i]==0 ? ImDtTypes<T>::max() : lIn1[i] / lIn2[i];
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    if (value==0)
 	    {
@@ -564,7 +564,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = (T)(lIn1[i] && lIn2[i]);
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = (T)(lIn1[i] && value);
@@ -580,7 +580,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = (T)(lIn1[i] & lIn2[i]);
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = (T)(lIn1[i] & value);
@@ -601,7 +601,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = (T)(lIn1[i] || lIn2[i]);
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = (T)(lIn1[i] || value);
@@ -617,7 +617,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = (T)(lIn1[i] | lIn2[i]);
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = (T)(lIn1[i] | value);
@@ -638,7 +638,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = (T)((lIn1[i] && !lIn2[i]) || (!lIn1[i] && lIn2[i]));
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = (T)((lIn1[i] && !value) || (!lIn1[i] && value));
@@ -654,7 +654,7 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = (T)(lIn1[i] ^ lIn2[i]);
 	}
-	inline void _exec(lineType lIn1, const T &value, size_t size, lineType lOut)
+	inline void _exec(lineType lIn1, const T value, size_t size, lineType lOut)
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = (T)(lIn1[i] ^ value);

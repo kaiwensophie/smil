@@ -111,7 +111,8 @@ namespace smil
 		lineFunction._exec(srcPixels+i*blockSize, blockSize, destPixels+i*blockSize);
 	}
 	// Remaining pixels
-	lineFunction._exec(srcPixels+blockNbr*blockSize, pixCount-(blockSize*blockNbr), destPixels+blockNbr*blockSize);
+	if (pixCount%blockSize)
+	  lineFunction._exec(srcPixels+blockNbr*blockSize, pixCount%blockSize, destPixels+blockNbr*blockSize);
 	
 	imOut.modified();
 
@@ -141,7 +142,8 @@ namespace smil
 		lineFunction._exec(destPixels+i*blockSize, blockSize, value);
 	}
 	// Remaining pixels
-	lineFunction._exec(destPixels+blockNbr*blockSize, pixCount-(blockSize*blockNbr), value);
+	if (pixCount%blockSize)
+	  lineFunction._exec(destPixels+blockNbr*blockSize, pixCount%blockSize, value);
 	
 	imOut.modified();
 
@@ -174,7 +176,8 @@ namespace smil
 		lineFunction._exec(srcPixels1+i*blockSize, srcPixels2+i*blockSize, blockSize, destPixels+i*blockSize);
 	}
 	// Remaining pixels
-	lineFunction._exec(srcPixels1+blockNbr*blockSize, srcPixels2+blockNbr*blockSize, pixCount-(blockSize*blockNbr), destPixels+blockNbr*blockSize);
+	if (pixCount%blockSize)
+	  lineFunction._exec(srcPixels1+blockNbr*blockSize, srcPixels2+blockNbr*blockSize, pixCount%blockSize, destPixels+blockNbr*blockSize);
 	
 	imOut.modified();
 
@@ -205,7 +208,8 @@ namespace smil
 		lineFunction._exec(srcPixels+i*blockSize, destPixels+i*blockSize, blockSize, destPixels+i*blockSize);
 	}
 	// Remaining pixels
-	lineFunction._exec(srcPixels+blockNbr*blockSize, destPixels+blockNbr*blockSize, pixCount-(blockSize*blockNbr), destPixels+blockNbr*blockSize);
+	if (pixCount%blockSize)
+	  lineFunction._exec(srcPixels+blockNbr*blockSize, destPixels+blockNbr*blockSize, pixCount%blockSize, destPixels+blockNbr*blockSize);
 	
 	imInOut.modified();
 
@@ -237,7 +241,8 @@ namespace smil
 		lineFunction._exec(srcPixels+i*blockSize, value, blockSize, destPixels+i*blockSize);
 	}
 	// Remaining pixels
-	lineFunction._exec(srcPixels+blockNbr*blockSize, value, pixCount-(blockSize*blockNbr), destPixels+blockNbr*blockSize);
+	if (pixCount%blockSize)
+	  lineFunction._exec(srcPixels+blockNbr*blockSize, value, pixCount%blockSize, destPixels+blockNbr*blockSize);
 	
 	imOut.modified();
 
