@@ -47,7 +47,7 @@ namespace smil
 	T minVal, maxVal, trueVal, falseVal;
 	typedef typename ImDtTypes<T>::lineType lineType;
 	
-	inline void _exec(const lineType &lIn, int size, lineType &lOut)
+	inline void _exec(const lineType lIn, int size, lineType lOut)
 	{
 	    for(int i=0;i<size;i++)
 		lOut[i] = lIn[i] >= minVal && lIn[i] <= maxVal  ? trueVal : falseVal;
@@ -61,7 +61,7 @@ namespace smil
 	double coeff;
 	typedef typename ImDtTypes<T>::lineType lineType;
 	
-	inline void _exec(const lineType &lIn, int size, lineType &lOut)
+	inline void _exec(const lineType lIn, int size, lineType lOut)
 	{
 	    double newVal;
 	    

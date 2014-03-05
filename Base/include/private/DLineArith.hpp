@@ -186,6 +186,11 @@ namespace smil
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = lIn1[i] < lIn2[i] ? lIn1[i] : lIn2[i];
 	}
+	inline void _exec(const lineType lIn1, const T value, size_t size, lineType lOut)
+	{
+	    for (size_t i=0;i<size;i++)
+		lOut[i] = lIn1[i] < value ? lIn1[i] : value;
+	}
     };
 
     template <class T>
@@ -417,6 +422,11 @@ namespace smil
 	{
 	    for (size_t i=0;i<size;i++)
 		lOut[i] = double(lIn1[i]) * double(lIn2[i]) > double(ImDtTypes<T>::max()) ? ImDtTypes<T>::max() : lIn1[i] * lIn2[i];
+	}
+	inline void _exec(const lineType lIn1, const T value, size_t size, lineType lOut)
+	{
+	    for (size_t i=0;i<size;i++)
+		lOut[i] = double(lIn1[i]) * double(value) > double(ImDtTypes<T>::max()) ? ImDtTypes<T>::max() : lIn1[i] * value;
 	}
     };
 

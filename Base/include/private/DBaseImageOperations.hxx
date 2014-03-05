@@ -91,27 +91,28 @@ namespace smil
     template <class T, class lineFunction_T>
     RES_T unaryImageFunction<T, lineFunction_T>::_exec(const imageType &imIn, imageType &imOut)
     {
-	if (!areAllocated(&imIn, &imOut, NULL))
-	    return RES_ERR_BAD_ALLOCATION;
+	CHECK_ALLOCATED(&imIn, &imOut);
 
-	size_t lineLen = imIn.getWidth();
-	size_t lineCount = imIn.getLineCount();
-
-	sliceType srcLines = imIn.getLines();
-	sliceType destLines = imOut.getLines();
+	size_t pixCount = imIn.getPixelCount();
+	const lineType srcPixels = imIn.getPixels();
+	lineType destPixels = imOut.getPixels();
 	
 	int nthreads = Core::getInstance()->getNumberOfThreads();
-	int i;
+	size_t blockSize = MAX(pixCount/nthreads - (pixCount/nthreads) % SIMD_VEC_SIZE, 1);
+	size_t blockNbr = pixCount/blockSize;
+	size_t i;
+	
 	#ifdef USE_OPEN_MP
 	    #pragma omp parallel private(i) num_threads(nthreads)
 	#endif // USE_OPEN_MP
 	{
-	    #ifdef USE_OPEN_MP
-		#pragma omp for
-	    #endif // USE_OPEN_MP
-	    for (i=0;i<lineCount;i++)
-		lineFunction._exec(srcLines[i], lineLen, destLines[i]);
+	    #pragma omp for
+	    for (i=0;i<blockNbr;i++)
+		lineFunction._exec(srcPixels+i*blockSize, blockSize, destPixels+i*blockSize);
 	}
+	// Remaining pixels
+	lineFunction._exec(srcPixels+blockNbr*blockSize, pixCount-(blockSize*blockNbr), destPixels+blockNbr*blockSize);
+	
 	imOut.modified();
 
 	return RES_OK;
@@ -121,35 +122,29 @@ namespace smil
     template <class T, class lineFunction_T>
     RES_T unaryImageFunction<T, lineFunction_T>::_exec(imageType &imOut, const T &value)
     {
-	if (!areAllocated(&imOut, NULL))
-	    return RES_ERR_BAD_ALLOCATION;
+	CHECK_ALLOCATED(&imOut);
 
-	size_t lineLen = imOut.getWidth();
-	size_t lineCount = imOut.getLineCount();
-
-	sliceType destLines = imOut.getLines();
-	lineType constBuf = ImDtTypes<T>::createLine(lineLen);
-
-	// Fill the first aligned buffer with the constant value
-	fillLine<T>(constBuf, lineLen, value);
-
-	// Use it for operations on lines
-
+	size_t pixCount = imOut.getPixelCount();
+	lineType destPixels = imOut.getPixels();
+	
 	int nthreads = Core::getInstance()->getNumberOfThreads();
-	int i;
+	size_t blockSize = MAX(pixCount/nthreads - (pixCount/nthreads) % SIMD_VEC_SIZE, 1);
+	size_t blockNbr = pixCount/blockSize;
+	size_t i;
+	
 	#ifdef USE_OPEN_MP
 	    #pragma omp parallel private(i) num_threads(nthreads)
 	#endif // USE_OPEN_MP
 	{
-	    #ifdef USE_OPEN_MP
-		#pragma omp for
-	    #endif // USE_OPEN_MP
-	    for (i=0;i<lineCount;i++)
-		lineFunction._exec(constBuf, lineLen, destLines[i]);
+	    #pragma omp for
+	    for (i=0;i<blockNbr;i++)
+		lineFunction._exec(destPixels+i*blockSize, blockSize, value);
 	}
-	ImDtTypes<T>::deleteLine(constBuf);
-	imOut.modified();
+	// Remaining pixels
+	lineFunction._exec(destPixels+blockNbr*blockSize, pixCount-(blockSize*blockNbr), value);
 	
+	imOut.modified();
+
 	return RES_OK;
     }
 
@@ -158,28 +153,29 @@ namespace smil
     template <class T, class lineFunction_T>
     RES_T binaryImageFunction<T, lineFunction_T>::_exec(const imageType &imIn1, const imageType &imIn2, imageType &imOut)
     {
-	if (!areAllocated(&imIn1, &imIn2, &imOut, NULL))
-	    return RES_ERR_BAD_ALLOCATION;
+	CHECK_ALLOCATED(&imIn1, &imIn2, &imOut);
 
-	size_t lineLen = imIn1.getWidth();
-	size_t lineCount = imIn1.getLineCount();
-
-	lineType *srcLines1 = imIn1.getLines();
-	lineType *srcLines2 = imIn2.getLines();
-	lineType *destLines = imOut.getLines();
-
+	size_t pixCount = imIn1.getPixelCount();
+	const lineType srcPixels1 = imIn1.getPixels();
+	const lineType srcPixels2 = imIn2.getPixels();
+	lineType destPixels = imOut.getPixels();
+	
 	int nthreads = Core::getInstance()->getNumberOfThreads();
-	int i;
+	size_t blockSize = MAX(pixCount/nthreads - (pixCount/nthreads) % SIMD_VEC_SIZE, 1);
+	size_t blockNbr = pixCount/blockSize;
+	size_t i;
+	
 	#ifdef USE_OPEN_MP
 	    #pragma omp parallel private(i) num_threads(nthreads)
 	#endif // USE_OPEN_MP
 	{
-	    #ifdef USE_OPEN_MP
-		#pragma omp for
-	    #endif // USE_OPEN_MP
-	    for (i=0;i<(int)lineCount;i++)
-		    lineFunction(srcLines1[i], srcLines2[i], lineLen, destLines[i]);
+	    #pragma omp for
+	    for (i=0;i<blockNbr;i++)
+		lineFunction._exec(srcPixels1+i*blockSize, srcPixels2+i*blockSize, blockSize, destPixels+i*blockSize);
 	}
+	// Remaining pixels
+	lineFunction._exec(srcPixels1+blockNbr*blockSize, srcPixels2+blockNbr*blockSize, pixCount-(blockSize*blockNbr), destPixels+blockNbr*blockSize);
+	
 	imOut.modified();
 
 	return RES_OK;
@@ -189,31 +185,28 @@ namespace smil
     template <class T, class lineFunction_T>
     RES_T binaryImageFunction<T, lineFunction_T>::_exec(const imageType &imIn, imageType &imInOut)
     {
-	if (!areAllocated(&imIn, &imInOut, NULL))
-	    return RES_ERR_BAD_ALLOCATION;
+	CHECK_ALLOCATED(&imIn, &imInOut);
 
-	size_t lineLen = imIn.getWidth();
-	int lineCount = imIn.getLineCount();
-
-	sliceType srcLines1 = imIn.getLines();
-	sliceType srcLines2 = imInOut.getLines();
-
-	lineType tmpBuf = ImDtTypes<T>::createLine(lineLen);
-
+	size_t pixCount = imIn.getPixelCount();
+	const lineType srcPixels = imIn.getPixels();
+	lineType destPixels = imInOut.getPixels();
+	
 	int nthreads = Core::getInstance()->getNumberOfThreads();
-	int i;
+	size_t blockSize = MAX(pixCount/nthreads - (pixCount/nthreads) % SIMD_VEC_SIZE, 1);
+	size_t blockNbr = pixCount/blockSize;
+	size_t i;
+	
 	#ifdef USE_OPEN_MP
 	    #pragma omp parallel private(i) num_threads(nthreads)
 	#endif // USE_OPEN_MP
 	{
-	    #ifdef USE_OPEN_MP
-		#pragma omp for
-	    #endif // USE_OPEN_MP
-	    for (i=0;i<lineCount;i++)
-		lineFunction(srcLines1[i], srcLines2[i], lineLen, tmpBuf);
+	    #pragma omp for
+	    for (i=0;i<blockNbr;i++)
+		lineFunction._exec(srcPixels+i*blockSize, destPixels+i*blockSize, blockSize, destPixels+i*blockSize);
 	}
-
-	ImDtTypes<T>::deleteLine(tmpBuf);
+	// Remaining pixels
+	lineFunction._exec(srcPixels+blockNbr*blockSize, destPixels+blockNbr*blockSize, pixCount-(blockSize*blockNbr), destPixels+blockNbr*blockSize);
+	
 	imInOut.modified();
 
 	return RES_OK;
@@ -224,35 +217,28 @@ namespace smil
     template <class T, class lineFunction_T>
     RES_T binaryImageFunction<T, lineFunction_T>::_exec(const imageType &imIn, const T &value, imageType &imOut)
     {
-	if (!areAllocated(&imIn, &imOut, NULL))
-	    return RES_ERR_BAD_ALLOCATION;
+	CHECK_ALLOCATED(&imIn, &imOut);
 
-	size_t lineLen = imIn.getWidth();
-	size_t lineCount = imIn.getLineCount();
-
-	sliceType srcLines = imIn.getLines();
-	sliceType destLines = imOut.getLines();
-
-	lineType constBuf = ImDtTypes<T>::createLine(lineLen);
-
-	// Fill the const buffer with the value
-	fillLine<T> f;
-	f(constBuf, lineLen, value);
-
+	size_t pixCount = imIn.getPixelCount();
+	const lineType srcPixels = imIn.getPixels();
+	lineType destPixels = imOut.getPixels();
+	
 	int nthreads = Core::getInstance()->getNumberOfThreads();
-	int i;
+	size_t blockSize = MAX(pixCount/nthreads - (pixCount/nthreads) % SIMD_VEC_SIZE, 1);
+	size_t blockNbr = pixCount/blockSize;
+	size_t i;
+	
 	#ifdef USE_OPEN_MP
 	    #pragma omp parallel private(i) num_threads(nthreads)
 	#endif // USE_OPEN_MP
 	{
-	    #ifdef USE_OPEN_MP
-		#pragma omp for
-	    #endif // USE_OPEN_MP
-	  for (i=0;i<lineCount;i++)
-	      lineFunction(srcLines[i], constBuf, lineLen, destLines[i]);
+	    #pragma omp for
+	    for (i=0;i<blockNbr;i++)
+		lineFunction._exec(srcPixels+i*blockSize, value, blockSize, destPixels+i*blockSize);
 	}
+	// Remaining pixels
+	lineFunction._exec(srcPixels+blockNbr*blockSize, value, pixCount-(blockSize*blockNbr), destPixels+blockNbr*blockSize);
 	
-	ImDtTypes<T>::deleteLine(constBuf);
 	imOut.modified();
 
 	return RES_OK;
