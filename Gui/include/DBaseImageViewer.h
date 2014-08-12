@@ -40,8 +40,7 @@ namespace smil
     */
     /*@{*/
 
-    template <class T>
-    class Image;
+    template <class, typename> class Image;
 
     class BaseImageViewer : public BaseObject
     {

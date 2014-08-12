@@ -33,6 +33,7 @@
 
 #include "Base/include/private/DLineArith.hpp"
 #include "Core/include/DColor.h"
+#include "Core/include/private/DMultichannelImage.hpp"
 
 /**
  * \ingroup Arith

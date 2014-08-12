@@ -26,15 +26,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef SMIL_WRAP_RGB
+#include "NSTypes/RGB/include/DRGB.h"
+#endif // SMIL_WRAP_RGB
 
 #include "Core/include/private/DImage.hxx"
 
 #include "IO/include/private/DImageIO.hpp"
 #include "IO/include/private/DImageIO.hxx"
 
-#ifdef SMIL_WRAP_RGB
-#include "NSTypes/RGB/include/DRGB.h"
-#endif // SMIL_WRAP_RGB
 
 #include "Core/include/DErrors.h"
 

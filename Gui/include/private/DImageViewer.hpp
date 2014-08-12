@@ -36,7 +36,7 @@
 namespace smil
 {
 
-    template <class T> class Image;
+    template <class,typename> class Image;
     
    /**
     * \ingroup Gui
@@ -47,12 +47,12 @@ namespace smil
     * Base image viewer.
     * 
     */
-    template <class T>
+    template <class T, typename _T=void>
     class ImageViewer : public BaseImageViewer
     {
     public:
 	typedef BaseImageViewer parentClass;
-	friend class Image<T>;
+	friend class Image<T,_T>;
 	
 	ImageViewer()
 	  : BaseImageViewer("ImageViewer"),
@@ -63,7 +63,7 @@ namespace smil
 	    imSize[0] = imSize[1] = imSize[2] = 0;
 	}
 	
-	ImageViewer(Image<T> &im)
+	ImageViewer(Image<T,_T> &im)
 	  : BaseImageViewer("ImageViewer"),
 	    image(NULL),
 	    labelImage(false)
@@ -73,7 +73,7 @@ namespace smil
 	    setImage(im);
 	}
 	
-	virtual void setImage(Image<T> &im)
+	virtual void setImage(Image<T,_T> &im)
 	{
 	    if (image)
 	      disconnect();
@@ -85,7 +85,7 @@ namespace smil
 	    if (&im)
 	      image->onModified.connect(&this->updateSlot);
 	}
-	virtual Image<T> *getImage()
+	virtual Image<T,_T> *getImage()
 	{
 	    return this->image;
 	}
@@ -117,9 +117,9 @@ namespace smil
 	    if (this->isVisible())
 	      this->drawImage();
 	}
-	virtual void drawOverlay(Image<T> &) {}
+	virtual void drawOverlay(Image<T,_T> &) {}
 	virtual void clearOverlay() {}
-    virtual RES_T getOverlay(Image<T> &/*img*/) { return RES_ERR; }
+    virtual RES_T getOverlay(Image<T,_T> &/*img*/) { return RES_ERR; }
 	
 	Signal onOverlayModified;
 	
@@ -130,7 +130,7 @@ namespace smil
     protected:
 	virtual void drawImage() {}
     virtual void onSizeChanged(size_t /*width*/, size_t /*height*/, size_t /*depth*/) {}
-	Image<T> *image;
+	Image<T,_T> *image;
 	bool labelImage;
 	
     private:

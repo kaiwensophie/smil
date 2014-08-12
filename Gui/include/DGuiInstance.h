@@ -53,8 +53,7 @@ namespace smil
     */
     /*@{*/
 
-    template <class T>
-    class ImageViewer;
+    template <class,typename> class ImageViewer;
     
     class Gui;
     

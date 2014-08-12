@@ -47,7 +47,7 @@ namespace smil
     #define BASE_QT_VIEWER ImageViewerWidget
 
 
-    template <class T> class Image;
+    template <class,typename> class Image;
     
    /**
     * \ingroup Gui
@@ -67,19 +67,19 @@ namespace smil
      * \li \b H SHow the histogram window (requires the Qwt library)
      * \li \b P SHow the plot window (requires the Qwt library)
      */
-    template <class T>
+    template <class T, typename _T=void>
     class QtImageViewer 
 #ifndef SWIG    
-      : public ImageViewer<T>, public BASE_QT_VIEWER
+      : public ImageViewer<T,_T>, public BASE_QT_VIEWER
 #endif // SWIG    
     {
     public:
-	typedef ImageViewer<T> parentClass;
+	typedef ImageViewer<T,_T> parentClass;
 	QtImageViewer();
-	QtImageViewer(Image<T> &im);
+	QtImageViewer(Image<T,_T> &im);
 	~QtImageViewer();
 	
-	virtual void setImage(Image<T> &im);
+	virtual void setImage(Image<T,_T> &im);
 	virtual void hide();
 	virtual void show();
 	virtual void showLabel();
@@ -98,9 +98,9 @@ namespace smil
 	    
 	    BASE_QT_VIEWER::updateIcon();
 	}
-	virtual void drawOverlay(Image<T> &im);
+	virtual void drawOverlay(Image<T,_T> &im);
 	virtual void clearOverlay() { BASE_QT_VIEWER::clearOverlay(); }
-	virtual RES_T getOverlay(Image<T> &img);
+	virtual RES_T getOverlay(Image<T,_T> &img);
 
 	//! Set the color table as a 8bits RGB map (keys between 0 and 255)
 	virtual void setLookup(const map<UINT8,RGB> &lut);

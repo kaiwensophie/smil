@@ -57,7 +57,7 @@ namespace smil
     
     RES_T getPNGFileInfo(const char* filename, ImageFileInfo &fInfo);
 
-    template <class T> class Image;
+    template <class,typename> class Image;
 
     template <class T=void>
     class PNGImageFileHandler : public ImageFileHandler<T>

@@ -37,7 +37,7 @@
 namespace smil
 {
   
-    template <class T> class Image;
+    template <class,typename> class Image;
 
 
     // Base abstract struct of line unary function

@@ -47,8 +47,8 @@
 
 namespace smil
 {
-    template <class T>
-    QtImageViewer<T>::QtImageViewer()
+    template <class T, typename _T>
+    QtImageViewer<T,_T>::QtImageViewer()
       : BASE_QT_VIEWER(NULL)
     {
     #ifdef USE_QWT
@@ -57,8 +57,8 @@ namespace smil
     #endif // USE_QWT
     }
 
-    template <class T>
-    QtImageViewer<T>::QtImageViewer(Image<T> &im)
+    template <class T, typename _T>
+    QtImageViewer<T,_T>::QtImageViewer(Image<T,_T> &im)
       : ImageViewer<T>(im),
 	BASE_QT_VIEWER(NULL)
     {
@@ -69,8 +69,8 @@ namespace smil
 	setImage(im);
     }
 
-    template <class T>
-    QtImageViewer<T>::~QtImageViewer()
+    template <class T, typename _T>
+    QtImageViewer<T,_T>::~QtImageViewer()
     {
 	close();
 
@@ -83,8 +83,8 @@ namespace smil
     }
 
 
-    template <class T>
-    void QtImageViewer<T>::setImage(Image<T> &im)
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::setImage(Image<T,_T> &im)
     {
 	ImageViewer<T>::setImage(im);
 	BASE_QT_VIEWER::setImageSize(im.getWidth(), im.getHeight(), im.getDepth());
@@ -97,8 +97,8 @@ namespace smil
 	}
     }
 
-    template <class T>
-    void QtImageViewer<T>::show()
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::show()
     {
 	if (!BASE_QT_VIEWER::isVisible())
 	{
@@ -110,8 +110,8 @@ namespace smil
 	BASE_QT_VIEWER::activateWindow();
     }
 
-    template <class T>
-    void QtImageViewer<T>::showLabel()
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::showLabel()
     {
 	this->setLabelImage(true);
 	if (!BASE_QT_VIEWER::isVisible())
@@ -125,28 +125,28 @@ namespace smil
 	update();
     }
 
-    template <class T>
-    void QtImageViewer<T>::hide()
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::hide()
     {
 	BASE_QT_VIEWER::hide();
     }
 
-    template <class T>
-    bool QtImageViewer<T>::isVisible()
+    template <class T, typename _T>
+    bool QtImageViewer<T,_T>::isVisible()
     {
 	return BASE_QT_VIEWER::isVisible();
     }
 
-    template <class T>
-    void QtImageViewer<T>::setName(const char *_name)
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::setName(const char *_name)
     {
 	parentClass::setName(_name);
 	QString buf = _name + QString(" (") + QString(parentClass::image->getTypeAsString()) + QString(")");
 	BASE_QT_VIEWER::setName(buf);
     }
 
-    template <class T>
-    void QtImageViewer<T>::setLabelImage(bool val)
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::setLabelImage(bool val)
     {
 	if (parentClass::labelImage==val)
 	  return;
@@ -157,8 +157,8 @@ namespace smil
 	update();
     }
 
-    template <class T>
-    void QtImageViewer<T>::update()
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::update()
     {
 	if (!this->image)
 	  return;
@@ -178,16 +178,16 @@ namespace smil
     }
 
 
-    template <class T>
-    void QtImageViewer<T>::saveSnapshot(const char *fileName)
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::saveSnapshot(const char *fileName)
     {
 	BASE_QT_VIEWER::saveAs(fileName);
     }
 
-    template <class T>
-    void QtImageViewer<T>::drawImage()
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::drawImage()
     {
-	typename Image<T>::sliceType lines = this->image->getSlices()[slider->value()];
+	typename Image<T,_T>::sliceType lines = this->image->getSlices()[slider->value()];
 
 	size_t w = this->image->getWidth();
 	size_t h = this->image->getHeight();
@@ -213,7 +213,7 @@ namespace smil
 
 	for (size_t j=0;j<h;j++,lines++)
 	{
-	    typename Image<T>::lineType pixels = *lines;
+	    typename Image<T,_T>::lineType pixels = *lines;
 
 	    destLine = this->qImage->scanLine(j);
 	    for (size_t i=0;i<w;i++)
@@ -234,14 +234,14 @@ namespace smil
     #endif // SMIL_WRAP_Bit
 
 
-    template <class T>
-    void QtImageViewer<T>::drawOverlay(Image<T> &im)
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::drawOverlay(Image<T,_T> &im)
     {
 	if (!qOverlayImage)
 	  createOverlayImage();
 
-	typename Image<T>::sliceType lines = im.getSlices()[slider->value()];
-	typename Image<T>::lineType pixels;
+	typename Image<T,_T>::sliceType lines = im.getSlices()[slider->value()];
+	typename Image<T,_T>::lineType pixels;
 
 	qOverlayImage->fill(0);
 
@@ -262,8 +262,8 @@ namespace smil
 	BASE_QT_VIEWER::update();
     }
 
-    template <class T>
-    RES_T QtImageViewer<T>::getOverlay(Image<T> &img)
+    template <class T, typename _T>
+    RES_T QtImageViewer<T,_T>::getOverlay(Image<T,_T> &img)
     {
 	if (!qOverlayImage)
 	  createOverlayImage();
@@ -272,8 +272,8 @@ namespace smil
 
 	QRgb *srcLine;
 	int value;
-	typename Image<T>::sliceType lines = img.getLines();
-	typename Image<T>::lineType pixels;
+	typename Image<T,_T>::sliceType lines = img.getLines();
+	typename Image<T,_T>::lineType pixels;
 
 	for (size_t j=0;j<qOverlayImage->height();j++)
 	{
@@ -289,8 +289,8 @@ namespace smil
 	return RES_OK;
     }
 
-    template <class T>
-    void QtImageViewer<T>::overlayDataChanged(bool triggerEvents)
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::overlayDataChanged(bool triggerEvents)
     {
 	BASE_QT_VIEWER::overlayDataChanged();
 	if (!triggerEvents)
@@ -299,8 +299,8 @@ namespace smil
 	ImageViewer<T>::onOverlayModified.trigger(&event);
     }
 
-    template <class T>
-    void QtImageViewer<T>::setLookup(const map<UINT8,RGB> &lut)
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::setLookup(const map<UINT8,RGB> &lut)
     {
 	baseColorTable.clear();
 	map<UINT8,RGB>::const_iterator it;
@@ -317,8 +317,8 @@ namespace smil
 	update();
     }
 
-    template <class T>
-    void QtImageViewer<T>::resetLookup()
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::resetLookup()
     {
 	baseColorTable.clear();
 	for (int i=0;i<256;i++)
@@ -328,8 +328,8 @@ namespace smil
 	update();
     }
 
-    template <class T>
-    void QtImageViewer<T>::displayPixelValue(size_t x, size_t y, size_t z)
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::displayPixelValue(size_t x, size_t y, size_t z)
     {
 	T pixVal;
 
@@ -349,8 +349,8 @@ namespace smil
     }
 
 
-    template <class T>
-    void QtImageViewer<T>::displayMagnifyView(size_t x, size_t y, size_t z)
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::displayMagnifyView(size_t x, size_t y, size_t z)
     {
 	magnView->displayAt(x, y);
     //   return;
@@ -398,8 +398,8 @@ namespace smil
 	}
     }
 
-    template <class T>
-    void QtImageViewer<T>::dropEvent(QDropEvent *de)
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::dropEvent(QDropEvent *de)
     {
 	QList<QUrl> urls = de->mimeData()->urls();
 	int objNbr = urls.size();
@@ -424,8 +424,8 @@ namespace smil
     }
 
 #ifdef USE_QWT
-    template <class T>
-    void QtImageViewer<T>::displayHistogram(bool update)
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::displayHistogram(bool update)
     {
 	if (!update && histoPlot && histoPlot->isVisible())
 	{
@@ -483,8 +483,8 @@ namespace smil
 
     }
 
-    template <class T>
-    void QtImageViewer<T>::displayProfile(bool update)
+    template <class T, typename _T>
+    void QtImageViewer<T,_T>::displayProfile(bool update)
     {
 	if (update && (!profilePlot || !profilePlot->isVisible()))
 	  return;
@@ -510,7 +510,7 @@ namespace smil
 	vector<IntPoint> bPoints = bresenhamPoints(lnF.x1(), lnF.y1(), lnF.x2(), lnF.y2());
 
 	T value;
-	typename Image<T>::sliceType lines = this->image->getSlices()[slider->value()];
+	typename Image<T,_T>::sliceType lines = this->image->getSlices()[slider->value()];
 	int i = 0;
 
 

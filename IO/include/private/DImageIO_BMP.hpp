@@ -47,7 +47,7 @@ namespace smil
     
     RES_T getBMPFileInfo(const char* filename, ImageFileInfo &fInfo);
     
-    template <class T> class Image;
+    template <class,typename> class Image;
 
     template <class T=void>
     class BMPImageFileHandler : public ImageFileHandler<T>

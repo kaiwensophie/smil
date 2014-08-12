@@ -35,7 +35,7 @@
 #include "numpy/arrayobject.h"
 
   
-template <class T> class Image;
+template <class,typename> class Image;
 
 template <class T> int getNumpyType(Image<T> &im) { return NPY_VOID; } // Default
 

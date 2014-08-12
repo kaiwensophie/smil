@@ -43,8 +43,7 @@ namespace smil
     * @{
     */
 
-    template <class T> 
-    class ImageViewer;
+    template <class,typename> class ImageViewer;
 
     template <class T>
     class ResImage;
@@ -57,9 +56,10 @@ namespace smil
     * 
     * \tparam T Image data type (UINT8, UINT16, ...)
     */  
-    template <class T>
+    template <class T, typename _T=void>
     class Image : public BaseImage
     {
+    protected:
 	typedef BaseImage parentClass;
     public:
 
@@ -181,7 +181,7 @@ namespace smil
 	void fromIntVector(const vector<int> inVector);
 
 	//! Get the image viewer (create one if needed)
-	virtual ImageViewer<T> *getViewer();
+	virtual ImageViewer<T,_T> *getViewer();
 	
 	//! Check if the image is visible
 	//! \return \b true if the viewer is visible, \b false otherwise
@@ -375,7 +375,7 @@ namespace smil
 
 	RES_T restruct(void);
 
-	ImageViewer<T> *viewer;
+	ImageViewer<T,_T> *viewer;
 	void createViewer();
 	
 	T dumPixel;

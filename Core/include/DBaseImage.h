@@ -41,8 +41,7 @@
 namespace smil
 {
     class BaseImageViewer;
-    template <class T>
-    class ImageViewer;
+    template <class,typename> class ImageViewer;
 
     /**
     * Base Image class
