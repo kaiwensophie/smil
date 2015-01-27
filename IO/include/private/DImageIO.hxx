@@ -115,13 +115,17 @@ namespace smil
         {
     #ifdef USE_CURL
             string tmpFileName = "_smilTmpIO." + fileExt;
-            if (getHttpFile(filename, tmpFileName.c_str())!=RES_OK)
+            stringstream ss;
+            if (getHttpFile(filename, ss)!=RES_OK)
             {
                 ERR_MSG(string("Error downloading file ") + filename);
                 return RES_ERR;
             }
-            res = read(tmpFileName.c_str(), image);
-            remove(tmpFileName.c_str());
+            auto_ptr< ImageFileHandler<T> > fHandler0(getHandlerForFile<T>(filename));
+            
+            if (fHandler0.get())
+              return fHandler0->read(ss, image);
+            else return RES_ERR;
 
     #else // USE_CURL
             ERR_MSG("Error: to use this functionality you must compile SMIL with the Curl option");
@@ -143,6 +147,7 @@ namespace smil
         else return RES_ERR;
     }
 
+    
     /**
     * Read a stack of 2D images
     * 

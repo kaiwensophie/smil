@@ -31,6 +31,7 @@
 #include "Core/include/DErrors.h"
 
 #include <string>
+#include <sstream>
 #include <algorithm>
 #include <ctype.h>
 
@@ -90,11 +91,12 @@ namespace smil
     WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
     {
         size_t realsize = size * nmemb;
-        string *mem = (string*)userp;
+        stringstream *mem = (stringstream*)userp;
 
-        int pos = mem->size();
-        mem->resize(mem->size() + realsize);
-        mem->replace(pos, realsize, (const char*)contents);
+//         int pos = mem->size();
+//         mem->resize(mem->size() + realsize);
+//         mem->replace(pos, realsize, (const char*)contents);
+        *mem << (const char*)contents;
 
         return realsize;
     }
@@ -102,26 +104,29 @@ namespace smil
     /**
     * Download file data into a string buffer.
     */
-    string getHttpFile(const char *url) 
+    RES_T getHttpFile(const char *url, stringstream &buffer) 
     {
         CURL *curl_handle;
-        string buffer;
-
-        curl_global_init(CURL_GLOBAL_ALL);
         CURLcode res;
+        long respCode;
+        
         curl_handle = curl_easy_init();
+        
         if (curl_handle)
         {
             curl_easy_setopt(curl_handle, CURLOPT_URL, url);
             curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
             curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&buffer);
             res = curl_easy_perform(curl_handle);
+            curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &respCode);
             curl_easy_cleanup(curl_handle);
-            curl_global_cleanup();
         }
         else res = CURLE_FAILED_INIT;
 
-        return buffer;
+        ASSERT(respCode==200, "File not found on server.", RES_ERR_IO)
+        ASSERT((res==CURLE_OK), RES_ERR_IO)
+        
+        return RES_OK;
     }
 #endif // USE_CURL
     

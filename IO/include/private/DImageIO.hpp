@@ -32,6 +32,8 @@
 
 
 
+#include <fstream>
+#include <iostream> 
 
 #include "IO/include/DCommonIO.h"
 #include "Base/include/private/DImageArith.hpp"
@@ -47,7 +49,7 @@ namespace smil
     /*@{*/
     
 
-    template <class T=void>
+    template <class T=void, typename Enable=T>
     class ImageFileHandler
     {
     public:
@@ -67,18 +69,64 @@ namespace smil
           return RES_ERR;
       }
       
-      virtual RES_T read(const char*, Image<T> &)
+      virtual RES_T read(istream &, Image<T> &) {}
+      virtual RES_T write(const Image<T> &, ostream &) {}
+      
+      virtual RES_T read(const char* filename, Image<T> &img)
       {
-          cout << getDataTypeAsString<T>() << " data type not implemented for " << fileExtention << " files (read)." << endl;
-          return RES_ERR;
+          if (!typeIsAvailable())
+          {
+              cout << getDataTypeAsString<T>() << " data type not implemented for " << fileExtention << " files (read)." << endl;
+              return RES_ERR_NOT_IMPLEMENTED;
+          }
+          else
+          {
+              ifstream fp(filename, ios_base::binary);
+              
+              if (!fp.is_open())
+              {
+                  cout << "Cannot open file " << filename << endl;
+                  return RES_ERR_IO;
+              }
+              
+              RES_T res = read(fp, img);
+              
+              if (fp.is_open())
+                fp.close();
+              
+              return res;
+          }
       }
-      virtual RES_T write(const Image<T> &, const char*)
+      virtual RES_T write(const Image<T> &img, const char *filename)
       {
-          cout << getDataTypeAsString<T>() << " data type not implemented for " << fileExtention << " files (write)." << endl;
-          return RES_ERR;
+          if (!typeIsAvailable())
+          {
+              cout << getDataTypeAsString<T>() << " data type not implemented for " << fileExtention << " files (write)." << endl;
+              return RES_ERR;
+          }
+          else
+          {
+              ofstream fp(filename, ios_base::binary);
+              
+              if (!fp.is_open())
+              {
+                  cout << "Cannot open file " << filename << endl;
+                  return RES_ERR_IO;
+              }
+              
+              RES_T res = write(img, fp);
+              
+              if (fp.is_open())
+                fp.close();
+              
+              return res;
+          }
       }
+      
+      virtual bool typeIsAvailable() { return false; }
     };
-     
+
+    
     template <class T>
     ImageFileHandler<T> *getHandlerForFile(const char* filename);
     
@@ -87,6 +135,9 @@ namespace smil
     */
     template <class T>
     RES_T read(const char* filename, Image<T> &image);
+    
+    template <class T>
+    RES_T read(istream &ist, Image<T> &image);
 
     /**
     * Read a stack of 2D images

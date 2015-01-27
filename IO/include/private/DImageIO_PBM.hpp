@@ -44,13 +44,13 @@ namespace smil
     */
     /*@{*/
     
-    RES_T readNetPBMFileInfo(ifstream &fp, ImageFileInfo &fInfo);
+    RES_T readNetPBMFileInfo(istream &st, ImageFileInfo &fInfo);
     RES_T readNetPBMFileInfo(const char* filename, ImageFileInfo &fInfo);
     
     template <class T> class Image;
 
-    template <class T=void>
-    class PGMImageFileHandler : public ImageFileHandler<T>
+    template <class T=void, typename Enable=T>
+    class PGMImageFileHandler : public ImageFileHandler<T,Enable>
     {
       public:
         PGMImageFileHandler()
@@ -62,19 +62,45 @@ namespace smil
         {
             return readNetPBMFileInfo(filename, fInfo);
         }
-        
-        virtual RES_T read(const char* filename, Image<T> &image)
-        {
-            return ImageFileHandler<T>::read(filename, image);
-        }
-        virtual RES_T write(const Image<T> &image, const char* filename)
-        {
-            return ImageFileHandler<T>::write(image, filename);
-        }
     };
 
-    template <class T=void>
+    template <class T>
+    class PGMImageFileHandler<T, ENABLE_IF( IS_SAME(T, UINT8) || IS_SAME(T, RGB) , T ) >  
+      : public ImageFileHandler<T,T>
+    {
+      public:
+        PGMImageFileHandler()
+          : ImageFileHandler<T>("PGM")
+        {
+        }
+        
+        virtual bool typeIsAvailable() { return true; }
+        
+        virtual RES_T read(istream &ist, Image<T> &image);
+        virtual RES_T write(const Image<T> &image, ostream  &ost);
+    };
+
+    
+    
+    template <class T=void, typename Enable=T>
     class PBMImageFileHandler : public ImageFileHandler<T>
+    {
+      public:
+        PBMImageFileHandler()
+          : ImageFileHandler<T>("PGM")
+        {
+        }
+        
+        virtual RES_T getFileInfo(const char* filename, ImageFileInfo &fInfo)
+        {
+            return readNetPBMFileInfo(filename, fInfo);
+        }
+        
+    };
+    
+    template <class T>  
+    class PBMImageFileHandler< T, ENABLE_IF( IS_SAME(T, UINT8), T ) > 
+      : public ImageFileHandler<T>
     {
       public:
         PBMImageFileHandler()
@@ -152,29 +178,29 @@ namespace smil
         }
     };
 
-    template <>
-    inline RES_T PBMImageFileHandler<void>::read(const char *, Image<void> &)
-    {
-        return RES_ERR;
-    }
-
-    template <>
-    inline RES_T PBMImageFileHandler<void>::write(const Image<void> &, const char *)
-    {
-        return RES_ERR;
-    }
+//     template <>
+//     inline RES_T PBMImageFileHandler<void>::read(const char *, Image<void> &)
+//     {
+//         return RES_ERR;
+//     }
+// 
+//     template <>
+//     inline RES_T PBMImageFileHandler<void>::write(const Image<void> &, const char *)
+//     {
+//         return RES_ERR;
+//     }
     
     // Specializations
-    template <>
-    RES_T PGMImageFileHandler<UINT8>::read(const char *filename, Image<UINT8> &image);
-    template <>
-    RES_T PGMImageFileHandler<UINT8>::write(const Image<UINT8> &image, const char *filename);
+//     template <>
+//     RES_T PGMImageFileHandler<UINT8>::read(const char *filename, Image<UINT8> &image);
+//     template <>
+//     RES_T PGMImageFileHandler<UINT8>::write(const Image<UINT8> &image, const char *filename);
 
 #ifdef SMIL_WRAP_RGB    
-    template <>
-    RES_T PGMImageFileHandler<RGB>::read(const char *filename, Image<RGB> &image);
-    template <>
-    RES_T PGMImageFileHandler<RGB>::write(const Image<RGB> &image, const char *filename);
+//     template <>
+//     RES_T PGMImageFileHandler<RGB>::read(const char *filename, Image<RGB> &image);
+//     template <>
+//     RES_T PGMImageFileHandler<RGB>::write(const Image<RGB> &image, const char *filename);
 #endif // SMIL_WRAP_RGB    
     
 /*@}*/

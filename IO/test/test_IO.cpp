@@ -67,25 +67,51 @@ class Test_RW_RAW : public TestCase
   }
 };
 
+class Test_NetPBM : public TestCase
+{
+  virtual void run()
+  {
+    typedef UINT8 T;
+    const char *fName = "_smil_io_tmp.pgm";
+    
+    Image<T> im1(3, 6);
+    T tab[] = { 28, 2, 3,
+                 2, 5, 6,
+                 3, 8, 9,
+                 4, 11, 12,
+                 5, 15, 16,
+                 6, 18, 19 };
+    im1 << tab;
+    TEST_ASSERT( write(im1, fName)==RES_OK );
+    
+    Image<T> im2;
+    
+    TEST_ASSERT( read(fName, im2)==RES_OK );
+    
+    TEST_ASSERT(im1==im2);
+    
+    
+    im1.load("/home/faessel/tmp/coins.pgm");
+//     im1.show();
+    
+//     Gui::execLoop();
+    
+    Image<UINT16> im3;
+    im3.load("/home/faessel/tmp/coins.pgm");
+    im2.load("http://cmm.ensmp.fr/~faessel/smil/images/coins.pgm");
+    
+    im2.show();
+     Gui::execLoop();
+  }
+};
+
 
 int main(int argc, char *argv[])
 {
-    Image_UINT8 im1;
-    Image_UINT8 im2;
-    Image_UINT8 im3;
-
-    read("http://cmm.ensmp.fr/~faessel/smil/images/barbara.png", im1);
-
-    
-    Image<RGB> rgbIm;
-
-    BaseImage *im0 = createFromFile("http://cmm.ensmp.fr/~faessel/smil/images/arearea.png");
-    delete im0;
-    
-    
     TestSuite ts;
 
     ADD_TEST(ts, Test_RW_RAW);
+    ADD_TEST(ts, Test_NetPBM);
     
     return ts.run();
 }

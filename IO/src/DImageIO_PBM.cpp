@@ -37,7 +37,7 @@
 namespace smil
 {
   
-    RES_T readNetPBMFileInfo(ifstream &fp, ImageFileInfo &fInfo)
+    RES_T readNetPBMFileInfo(istream &fp, ImageFileInfo &fInfo)
     {
         std::string buf;
 
@@ -133,19 +133,10 @@ namespace smil
     }
     
     template <>
-    RES_T PGMImageFileHandler<UINT8>::read(const char *filename, Image<UINT8> &image)
+    RES_T PGMImageFileHandler<UINT8>::read(istream &ist, Image<UINT8> &image)
     {
-        /* open image file */
-        ifstream fp(filename, ios_base::binary);
-        
-        if (!fp.is_open())
-        {
-            cout << "Cannot open file " << filename << endl;
-            return RES_ERR_IO;
-        }
-        
         ImageFileInfo fInfo;
-        ASSERT(readNetPBMFileInfo(fp, fInfo)==RES_OK, RES_ERR_IO);
+        ASSERT(readNetPBMFileInfo(ist, fInfo)==RES_OK, RES_ERR_IO);
         ASSERT(fInfo.colorType==ImageFileInfo::COLOR_TYPE_GRAY, "Not an 8bit gray image", RES_ERR_IO);
         
         int width = fInfo.width;
@@ -155,53 +146,40 @@ namespace smil
         
         if (fInfo.fileType==ImageFileInfo::FILE_TYPE_BINARY)
         {
-            fp.read((char*)image.getPixels(), width*height);
+            ist.read((char*)image.getPixels(), width*height);
         }
         else
         {
             ImDtTypes<UINT8>::lineType pixels = image.getPixels();
             
             for (size_t i=0;i<image.getPixelCount();i++, pixels++)
-              fp >> *((int*)pixels);
+              ist >> *((int*)pixels);
         }
-        
-        fp.close();
         
         return RES_OK;
     }
 
 
     template <>
-    RES_T PGMImageFileHandler<UINT8>::write(const Image<UINT8> &image, const char *filename)
+    RES_T PGMImageFileHandler<UINT8>::write(const Image<UINT8> &image, ostream &ost)
     {
-        /* open image file */
-        ofstream fp(filename, ios_base::binary);
-        
-        if (!fp.is_open())
-        {
-            cout << "Cannot open file " << filename << endl;
-            return RES_ERR_IO;
-        }
-        
         size_t width = image.getWidth(), height = image.getHeight();
         
-        fp << "P5" << endl;
-        fp << "# " << filename << endl;
-        fp << width << " " << height << endl;
-        fp << (int)maxVal(image) << endl;
+        ost << "P5" << endl;
+        ost << "# " << image.getName() << endl;
+        ost << width << " " << height << endl;
+        ost << (int)maxVal(image) << endl;
         
-        fp.write((char*)image.getPixels(), width*height);
-        
-        fp.close();
+        ost.write((char*)image.getPixels(), width*height);
         
         return RES_OK;
     }
     
     
 #ifdef SMIL_WRAP_RGB      
-    template <>
-    RES_T PGMImageFileHandler<RGB>::read(const char *filename, Image<RGB> &image)
-    {
+//     template <>
+//     RES_T PGMImageFileHandler<RGB>::read(const char *filename, Image<RGB> &image)
+//     {
 //         FILE *fp = fopen( filename, "rb" );
 // 
 //         ASSERT(fp!=NULL, string("Cannot open file ") + filename + " for input", RES_ERR_IO);
@@ -241,15 +219,15 @@ namespace smil
 //         
 //         image.modified();
 // 
-        return RES_OK;
-    }
+//         return RES_OK;
+//     }
 #endif // SMIL_WRAP_RGB  
 
 
 #ifdef SMIL_WRAP_RGB  
-    template <>
-    RES_T PGMImageFileHandler<RGB>::write(const Image<RGB> &image, const char *filename)
-    {
+//     template <>
+//     RES_T PGMImageFileHandler<RGB>::write(const Image<RGB> &image, const char *filename)
+//     {
 //         FILE* fp = fopen( filename, "wb" );
 // 
 //         if ( fp == NULL )
@@ -305,8 +283,8 @@ namespace smil
 // 
 //         fclose(fp);
 
-        return RES_OK;
-    }
+//         return RES_OK;
+//     }
 #endif // SMIL_WRAP_RGB  
 
 } // namespace smil

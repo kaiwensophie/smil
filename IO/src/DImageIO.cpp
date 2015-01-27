@@ -27,7 +27,6 @@
  */
 
 
-#include "Core/include/private/DImage.hxx"
 
 #include "IO/include/private/DImageIO.hpp"
 #include "IO/include/private/DImageIO.hxx"
@@ -69,7 +68,8 @@ namespace smil
               BaseImage *img = NULL;
       #ifdef USE_CURL
               string tmpFileName = "_smilTmpIO." + fileExt;
-              if (getHttpFile(filename, tmpFileName.c_str())!=RES_OK)
+              stringstream ss;
+              if (getHttpFile(filename, ss)!=RES_OK)
               {
                   ERR_MSG(string("Error downloading file ") + filename);
                   return img;

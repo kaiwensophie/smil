@@ -33,7 +33,7 @@
 #include "Core/include/DErrors.h"
 #include "Core/include/private/DImage.hpp"
 
-#include <stdio.h>
+#include <iostream>
 
 namespace smil
 {
@@ -85,7 +85,7 @@ namespace smil
     #ifdef USE_CURL
 
     RES_T getHttpFile(const char *url, const char *outfilename);
-    string getHttpFile(const char *url);
+    RES_T getHttpFile(const char *url, stringstream &buffer);
 
     #endif // USE_CURL
 /*@}*/
