@@ -46,11 +46,12 @@ namespace smil
     
     RES_T readNetPBMFileInfo(istream &st, ImageFileInfo &fInfo);
     RES_T readNetPBMFileInfo(const char* filename, ImageFileInfo &fInfo);
+    RES_T writeNetPBMFileInfo(ImageFileInfo &fInfo, ostream &ost);
     
     template <class T> class Image;
 
-    template <class T=void, typename Enable=T>
-    class PGMImageFileHandler : public ImageFileHandler<T,Enable>
+    template <class T, typename Enable=T>
+    class PGMImageFileHandler : public ImageFileHandler<T>
     {
       public:
         PGMImageFileHandler()
@@ -58,21 +59,17 @@ namespace smil
         {
         }
         
-        virtual RES_T getFileInfo(const char* filename, ImageFileInfo &fInfo)
+        virtual RES_T readHeader(istream &stream, ImageFileInfo &fInfo)
         {
-            return readNetPBMFileInfo(filename, fInfo);
+            return readNetPBMFileInfo(stream, fInfo);
         }
     };
 
     template <class T>
-    class PGMImageFileHandler<T, ENABLE_IF( IS_SAME(T, UINT8) || IS_SAME(T, RGB) , T ) >  
-      : public ImageFileHandler<T,T>
+    class PGMImageFileHandler<T, ENABLE_IF( IS_SAME(T, UINT8) , T ) >  
+      : public PGMImageFileHandler<T,void>
     {
       public:
-        PGMImageFileHandler()
-          : ImageFileHandler<T>("PGM")
-        {
-        }
         
         virtual bool typeIsAvailable() { return true; }
         
@@ -113,19 +110,10 @@ namespace smil
             return readNetPBMFileInfo(filename, fInfo);
         }
         
-        virtual RES_T read(const char* filename, Image<T> &image)
+        virtual RES_T read(istream &ist, Image<T> &image)
         {
-            /* open image file */
-            ifstream fp(filename, ios_base::binary);
-            
-            if (!fp.is_open())
-            {
-                cout << "Cannot open file " << filename << endl;
-                return RES_ERR_IO;
-            }
-            
             ImageFileInfo fInfo;
-            ASSERT(readNetPBMFileInfo(fp, fInfo)==RES_OK, RES_ERR_IO);
+            ASSERT(readNetPBMFileInfo(ist, fInfo)==RES_OK, RES_ERR_IO);
             ASSERT(fInfo.colorType==ImageFileInfo::COLOR_TYPE_BINARY, "Not an binary image", RES_ERR_IO);
             
             int width = fInfo.width;
@@ -137,10 +125,8 @@ namespace smil
             {
                 typename ImDtTypes<T>::sliceType lines = image.getLines();
                 
-                int nBytePerLine = width%8==0 ? width/8 : width/8+1;
                 char val;
                 int k;
-                int btot = 0;
                 
                 for (size_t j=0;j<height;j++)
                 {
@@ -149,7 +135,7 @@ namespace smil
                     for (int i=0;i<width;i++)
                     {
                         if (i%8 == 0)
-                          fp.read(&val, 1);
+                          ist.read(&val, 1);
                         
                         k = 7 - i%8;
                         pixels[i] = ( ( val >> k )%2 )==0 ? T(0) : ImDtTypes<T>::max();
@@ -163,18 +149,53 @@ namespace smil
                 int val;
                 for (size_t i=0;i<image.getPixelCount();i++)
                 {
-                    fp >> val;
+                    ist >> val;
                     pixels[i] = val==0 ? T(0) : ImDtTypes<T>::max();
                 }
             }
             
-            fp.close();
             
             return RES_OK;
         }
-        virtual RES_T write(const Image<T> &image, const char* filename)
+        virtual RES_T write(const Image<T> &image, ostream &ost)
         {
-            return ImageFileHandler<T>::write(image, filename);
+            int width = image.getWidth();
+            int height = image.getHeight();
+            
+            ImageFileInfo fInfo;
+            fInfo.width = width;
+            fInfo.height = height;
+            fInfo.colorType = ImageFileInfo::COLOR_TYPE_BINARY;
+            
+            writeNetPBMFileInfo(fInfo, ost);
+            
+            char val;
+            int k;
+            typename ImDtTypes<T>::sliceType lines = image.getLines();
+            
+            for (size_t j=0;j<height;j++)
+            {
+                typename ImDtTypes<T>::lineType pixels = lines[j];
+                val = 0;
+                
+                for (int i=0;i<width;i++)
+                {
+                    k = 7 - i%8;
+                    
+                    if (pixels[i]!=0)
+                      val |= ( 1L << k );
+                    
+                    if (i>0 && i%8 == 0)
+                    {
+                        ost.write(&val, 1);
+                        val = 0;
+                    }
+                }
+                if (k!=7)
+                  ost.write(&val, 1);
+            }
+            
+            return RES_OK;
         }
     };
 

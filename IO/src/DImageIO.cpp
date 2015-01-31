@@ -28,6 +28,8 @@
 
 
 
+#include "Core/include/DCore.h"
+
 #include "IO/include/private/DImageIO.hpp"
 #include "IO/include/private/DImageIO.hxx"
 

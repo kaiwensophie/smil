@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2011-2014, Matthieu FAESSEL and ARMINES
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
@@ -27,76 +27,79 @@
  */
 
 
-#ifndef _D_COMMON_IO_H
-#define _D_COMMON_IO_H
-
-#include "Core/include/DErrors.h"
-#include "Core/include/private/DImage.hpp"
-
-#include <iostream>
-#include <fstream>
+#include "IO/include/DFileManager.h"
 
 namespace smil
 {
   
-    /** 
-    * \addtogroup IO
-    */
-    /*@{*/
-    
-    string getFileExtension(string fileName);
-
-    class FileCloser
+   FileManager::FileManager()
+      : stream(NULL), _open(false)
     {
-    public:
-        FileCloser(FILE *_fp)
-        {
-            fp = _fp;
-        }
-        ~FileCloser()
-        {
-            if (fp)
-              fclose(fp);
-        }
-    protected:
-        FILE *fp;
-    };
+    }
     
-    
-
-    struct ImageFileInfo
+    FileManager::FileManager(const char* filename, ios_base::openmode mode)
+      : stream(NULL), _open(false)
     {
-        ImageFileInfo()
-          : colorType(COLOR_TYPE_UNKNOWN), scalarType(SCALAR_TYPE_UNKNOWN),
-          fileType(FILE_TYPE_BINARY),
-          width(0), height(0), depth(0),
-          dataStartPos(0)
+        open(filename, mode);
+    }
+        
+    FileManager::~FileManager()
+    {
+        close();
+    }
+    
+    
+    RES_T FileManager::open(const char* filename,  ios_base::openmode mode)
+    {
+        fileName = filename;
+        fileExtension = getFileExtension(fileName);
+        string filePrefix = fileName.substr(0, 7);
+        
+        openMode = mode;
+        if (!openMode & ios_base::out)
+          openMode |= ios_base::in;
+        
+        if (filePrefix=="http://")
         {
-        }
-        enum ColorType { COLOR_TYPE_GRAY, COLOR_TYPE_RGB, COLOR_TYPE_GA, COLOR_TYPE_RGBA, COLOR_TYPE_BINARY, COLOR_TYPE_UNKNOWN };
-        enum ScalarType { SCALAR_TYPE_UINT8, SCALAR_TYPE_UINT16, SCALAR_TYPE_INT8, SCALAR_TYPE_INT16, SCALAR_TYPE_FLOAT, SCALAR_TYPE_DOUBLE, SCALAR_TYPE_UNKNOWN };
-        enum FileType { FILE_TYPE_ASCII, FILE_TYPE_BINARY };
-        UINT channels;
-        ColorType colorType;
-        ScalarType scalarType;
-        FileType fileType;
-        size_t width, height, depth;
-        streampos dataStartPos;
-        string fileName;
-        double miscData; // Misc value
-    };
-    
-    
-    #ifdef USE_CURL
-
-    RES_T getHttpFile(const char *url, const char *outfilename);
-    RES_T getHttpFile(const char *url, ostream &buffer);
-
+    #ifndef USE_CURL
+            ERR_MSG("Error: to use this functionality you must compile SMIL with the Curl option");
+            return RES_ERR_IO;
+    #else // USE_CURL
+            if (openMode & ios_base::out)
+            {
+                ERR_MSG("Remote file access is only available in read mode.");
+                return RES_ERR_IO;
+            }
+            
+            stream = new stringstream();
+            
+            ASSERT(getHttpFile(filename, *stream)==RES_OK);
     #endif // USE_CURL
-/*@}*/
+        }
+        else
+        {
+            if (filePrefix=="file://")
+              fileName = fileName.substr(7);
 
+            stream = new fstream(fileName.c_str(), mode | ios_base::binary); // Force binary mode
+        }
+        
+        _open = true;
+        return RES_OK;
+    }
+    
+    void FileManager::close()
+    {
+        if (!_open)
+          return;
+        
+        if (stream)
+        {
+          delete stream;
+          stream = NULL;
+        }
+        
+        _open = false;
+    }
 } // namespace smil
 
-
-
-#endif // _D_COMMON_IO_H

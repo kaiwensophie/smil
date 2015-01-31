@@ -132,6 +132,32 @@ namespace smil
         return ret;
     }
     
+    RES_T writeNetPBMFileInfo(ImageFileInfo &fInfo, ostream &ost)
+    {
+        ost << "P";
+        
+        switch(fInfo.colorType)
+        {
+          case ImageFileInfo::COLOR_TYPE_BINARY:
+            ost << "4" << endl;
+            break;
+          case ImageFileInfo::COLOR_TYPE_GRAY:
+            ost << "5" << endl;
+            break;
+          case ImageFileInfo::COLOR_TYPE_RGB:
+            ost << "6" << endl;
+            break;
+        }
+        ost << "# " << fInfo.fileName << endl;
+        ost << fInfo.width << " " << fInfo.height << endl;
+        
+        // Max pixel val
+        if (fInfo.colorType!=ImageFileInfo::COLOR_TYPE_BINARY)
+          ost << (int)fInfo.miscData << endl;
+        
+        return RES_OK;
+    }
+    
     template <>
     RES_T PGMImageFileHandler<UINT8>::read(istream &ist, Image<UINT8> &image)
     {

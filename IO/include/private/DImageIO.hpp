@@ -36,6 +36,7 @@
 #include <iostream> 
 
 #include "IO/include/DCommonIO.h"
+#include "IO/include/private/DImageFileManager.hpp"
 #include "Base/include/private/DImageArith.hpp"
 
 
@@ -49,7 +50,7 @@ namespace smil
     /*@{*/
     
 
-    template <class T=void, typename Enable=T>
+    template <class T>
     class ImageFileHandler
     {
     public:
@@ -128,6 +129,8 @@ namespace smil
 
     
     template <class T>
+    ImageFileHandler<T> *getHandlerForExtension(const string &fileExt);
+    template <class T>
     ImageFileHandler<T> *getHandlerForFile(const char* filename);
     
     /**
@@ -137,7 +140,7 @@ namespace smil
     RES_T read(const char* filename, Image<T> &image);
     
     template <class T>
-    RES_T read(istream &ist, Image<T> &image);
+    RES_T read(istream &ist, const char *fileExtestion, Image<T> &image);
 
     /**
     * Read a stack of 2D images

@@ -27,76 +27,42 @@
  */
 
 
-#ifndef _D_COMMON_IO_H
-#define _D_COMMON_IO_H
+#ifndef _D_FILE_MANAGER_H
+#define _D_FILE_MANAGER_H
 
-#include "Core/include/DErrors.h"
-#include "Core/include/private/DImage.hpp"
+/**
+ * \defgroup IO
+ */
 
-#include <iostream>
-#include <fstream>
+#include "DCommonIO.h"
+
+
+using namespace std;
 
 namespace smil
 {
-  
-    /** 
-    * \addtogroup IO
-    */
-    /*@{*/
-    
-    string getFileExtension(string fileName);
-
-    class FileCloser
+    class FileManager //: public ifstream
     {
-    public:
-        FileCloser(FILE *_fp)
-        {
-            fp = _fp;
-        }
-        ~FileCloser()
-        {
-            if (fp)
-              fclose(fp);
-        }
-    protected:
-        FILE *fp;
-    };
-    
-    
-
-    struct ImageFileInfo
-    {
-        ImageFileInfo()
-          : colorType(COLOR_TYPE_UNKNOWN), scalarType(SCALAR_TYPE_UNKNOWN),
-          fileType(FILE_TYPE_BINARY),
-          width(0), height(0), depth(0),
-          dataStartPos(0)
-        {
-        }
-        enum ColorType { COLOR_TYPE_GRAY, COLOR_TYPE_RGB, COLOR_TYPE_GA, COLOR_TYPE_RGBA, COLOR_TYPE_BINARY, COLOR_TYPE_UNKNOWN };
-        enum ScalarType { SCALAR_TYPE_UINT8, SCALAR_TYPE_UINT16, SCALAR_TYPE_INT8, SCALAR_TYPE_INT16, SCALAR_TYPE_FLOAT, SCALAR_TYPE_DOUBLE, SCALAR_TYPE_UNKNOWN };
-        enum FileType { FILE_TYPE_ASCII, FILE_TYPE_BINARY };
-        UINT channels;
-        ColorType colorType;
-        ScalarType scalarType;
-        FileType fileType;
-        size_t width, height, depth;
-        streampos dataStartPos;
+      public:
+        FileManager();
+        FileManager (const char* filename, ios_base::openmode mode = ios_base::in);
+        virtual ~FileManager();
+        
+        virtual RES_T open (const char* filename,  ios_base::openmode mode = ios_base::in);
+        virtual void close();
+        
+        bool isOpen() { return _open; }
+        
+        iostream &getStream() { return *stream; }
+        
         string fileName;
-        double miscData; // Misc value
+        string fileExtension;
+      protected:
+        iostream *stream;
+        bool _open;
+        ios_base::openmode openMode;
     };
-    
-    
-    #ifdef USE_CURL
-
-    RES_T getHttpFile(const char *url, const char *outfilename);
-    RES_T getHttpFile(const char *url, ostream &buffer);
-
-    #endif // USE_CURL
-/*@}*/
-
 } // namespace smil
+ 
 
-
-
-#endif // _D_COMMON_IO_H
+#endif // _D_FILE_MANAGER_H

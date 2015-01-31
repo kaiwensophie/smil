@@ -34,6 +34,7 @@
 #include <sstream>
 #include <algorithm>
 #include <ctype.h>
+#include <fstream>
 
 #ifdef USE_CURL
 #include <curl/curl.h>
@@ -43,68 +44,31 @@ namespace smil
 {
 
 
-    string getFileExtension(const char *fileName)
+    string getFileExtension(string fileName)
     {
-        string fName(fileName);
-        string::size_type idx = fName.rfind('.');
-        string fExt = fName.substr(idx+1).c_str();
+        string::size_type idx = fileName.rfind('.');
+        string fExt = idx==string::npos ? "" : fileName.substr(idx+1).c_str();
         transform(fExt.begin(), fExt.end(), fExt.begin(), ::toupper);
         return fExt;
     }
     
     
 #ifdef USE_CURL
-    size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) 
-    {
-        size_t written;
-        written = fwrite(ptr, size, nmemb, stream);
-        return written;
-    }
-
-
-    
-    RES_T getHttpFile(const char *url, const char *outfilename) 
-    {
-        CURL *curl_handle;
-        FILE *fp;
-        CURLcode res;
-        curl_handle = curl_easy_init();
-        if (curl_handle) 
-        {
-            fp = fopen(outfilename,"wb");
-            curl_easy_setopt(curl_handle, CURLOPT_URL, url);
-            curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
-            curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, fp);
-            curl_easy_setopt(curl_handle, CURLOPT_FAILONERROR, 1);
-            res = curl_easy_perform(curl_handle);
-            curl_easy_cleanup(curl_handle);
-            fclose(fp);
-        }
-        else res = CURLE_FAILED_INIT;
-        
-        ASSERT((res==CURLE_OK), RES_ERR_IO);
-
-        return RES_OK;
-    }
 
     static size_t
-    WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
+    curlMemoryCallback(void *contents, size_t size, size_t nmemb, ostream *stream)
     {
-        size_t realsize = size * nmemb;
-        stringstream *mem = (stringstream*)userp;
+        stream->write((const char*)contents, nmemb);
 
-//         int pos = mem->size();
-//         mem->resize(mem->size() + realsize);
-//         mem->replace(pos, realsize, (const char*)contents);
-        *mem << (const char*)contents;
-
-        return realsize;
+        return nmemb;
     }
+
+
     
     /**
     * Download file data into a string buffer.
     */
-    RES_T getHttpFile(const char *url, stringstream &buffer) 
+    RES_T getHttpFile(const char *url, ostream &buffer) 
     {
         CURL *curl_handle;
         CURLcode res;
@@ -115,7 +79,7 @@ namespace smil
         if (curl_handle)
         {
             curl_easy_setopt(curl_handle, CURLOPT_URL, url);
-            curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+            curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, curlMemoryCallback);
             curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&buffer);
             res = curl_easy_perform(curl_handle);
             curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &respCode);
@@ -128,6 +92,21 @@ namespace smil
         
         return RES_OK;
     }
+    
+    
+    RES_T getHttpFile(const char *url, const char *outfilename) 
+    {
+        ofstream fp(outfilename, ios_base::binary);
+        
+        if (!fp.is_open())
+        {
+            cout << "Cannot open output file " << outfilename << endl;
+            return RES_ERR_IO;
+        }
+        
+        return getHttpFile(url, fp);
+    }
+
 #endif // USE_CURL
     
     

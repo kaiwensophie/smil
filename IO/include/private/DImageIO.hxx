@@ -62,9 +62,8 @@ namespace smil
 
      
     template <class T>
-    ImageFileHandler<T> *getHandlerForFile(const char* filename)
+    ImageFileHandler<T> *getHandlerForExtension(const string &fileExt)
     {
-        string fileExt = getFileExtension(filename);
         
         if (fileExt=="BMP")
             return new BMPImageFileHandler<T>();
@@ -100,11 +99,19 @@ namespace smil
         }
     }
     
+    template <class T>
+    ImageFileHandler<T> *getHandlerForFile(const char *fileName)
+    {
+        return getHandlerForExtension<T>(getFileExtension(fileName));
+    }
+    
+    
+    
     /**
     * Read image file
     */
     template <class T>
-    RES_T read(const char* filename, Image<T> &image)
+    RES_T read(const char *filename, Image<T> &image)
     {
         string fileExt = getFileExtension(filename);
         string filePrefix = (string(filename).substr(0, 7));
@@ -114,24 +121,22 @@ namespace smil
         if (filePrefix=="http://")
         {
     #ifdef USE_CURL
-            string tmpFileName = "_smilTmpIO." + fileExt;
             stringstream ss;
             if (getHttpFile(filename, ss)!=RES_OK)
             {
                 ERR_MSG(string("Error downloading file ") + filename);
-                return RES_ERR;
+                return RES_ERR_IO;
             }
-            auto_ptr< ImageFileHandler<T> > fHandler0(getHandlerForFile<T>(filename));
+            auto_ptr< ImageFileHandler<T> > fHandler(getHandlerForExtension<T>(fileExt));
             
-            if (fHandler0.get())
-              return fHandler0->read(ss, image);
+            if (fHandler.get())
+              return fHandler->read(ss, image);
             else return RES_ERR;
 
     #else // USE_CURL
             ERR_MSG("Error: to use this functionality you must compile SMIL with the Curl option");
-            res = RES_ERR;
+            return RES_ERR_IO;
     #endif // USE_CURL
-            return res;
         }
         else if (filePrefix=="file://")
         {
@@ -139,12 +144,14 @@ namespace smil
             string buf = fName.substr(7, fName.length()-7);
             return read(buf.c_str(), image);
         }
-
-        auto_ptr< ImageFileHandler<T> > fHandler(getHandlerForFile<T>(filename));
-        
-        if (fHandler.get())
-          return fHandler->read(filename, image);
-        else return RES_ERR;
+        else
+        {
+            auto_ptr< ImageFileHandler<T> > fHandler(getHandlerForExtension<T>(fileExt));
+            
+            if (fHandler.get())
+              return fHandler->read(filename, image);
+            else return RES_ERR_IO;
+        }
     }
 
     
