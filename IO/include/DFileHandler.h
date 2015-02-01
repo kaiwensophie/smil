@@ -41,12 +41,12 @@ using namespace std;
 
 namespace smil
 {
-    class FileManager //: public ifstream
+    class FileHandler //: public ifstream
     {
       public:
-        FileManager();
-        FileManager (const char* filename, ios_base::openmode mode = ios_base::in);
-        virtual ~FileManager();
+        FileHandler();
+        FileHandler (const char* filename, ios_base::openmode mode = ios_base::in);
+        virtual ~FileHandler();
         
         virtual RES_T open (const char* filename,  ios_base::openmode mode = ios_base::in);
         virtual void close();

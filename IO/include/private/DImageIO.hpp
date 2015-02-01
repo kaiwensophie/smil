@@ -36,7 +36,7 @@
 #include <iostream> 
 
 #include "IO/include/DCommonIO.h"
-#include "IO/include/private/DImageFileManager.hpp"
+#include "IO/include/private/DImageFileHandler.hpp"
 #include "Base/include/private/DImageArith.hpp"
 
 
@@ -49,85 +49,7 @@ namespace smil
     */
     /*@{*/
     
-
-    template <class T>
-    class ImageFileHandler
-    {
-    public:
-      ImageFileHandler(const char *ext)
-        : fileExtention(ext)
-      {
-      }
-      const char *fileExtention;
-      
-      virtual RES_T getFileInfo(const char*, ImageFileInfo &) 
-      { 
-          return RES_ERR; 
-      }
-      
-      virtual RES_T read(const char*)
-      {
-          return RES_ERR;
-      }
-      
-      virtual RES_T read(istream &, Image<T> &) {}
-      virtual RES_T write(const Image<T> &, ostream &) {}
-      
-      virtual RES_T read(const char* filename, Image<T> &img)
-      {
-          if (!typeIsAvailable())
-          {
-              cout << getDataTypeAsString<T>() << " data type not implemented for " << fileExtention << " files (read)." << endl;
-              return RES_ERR_NOT_IMPLEMENTED;
-          }
-          else
-          {
-              ifstream fp(filename, ios_base::binary);
-              
-              if (!fp.is_open())
-              {
-                  cout << "Cannot open file " << filename << endl;
-                  return RES_ERR_IO;
-              }
-              
-              RES_T res = read(fp, img);
-              
-              if (fp.is_open())
-                fp.close();
-              
-              return res;
-          }
-      }
-      virtual RES_T write(const Image<T> &img, const char *filename)
-      {
-          if (!typeIsAvailable())
-          {
-              cout << getDataTypeAsString<T>() << " data type not implemented for " << fileExtention << " files (write)." << endl;
-              return RES_ERR;
-          }
-          else
-          {
-              ofstream fp(filename, ios_base::binary);
-              
-              if (!fp.is_open())
-              {
-                  cout << "Cannot open file " << filename << endl;
-                  return RES_ERR_IO;
-              }
-              
-              RES_T res = write(img, fp);
-              
-              if (fp.is_open())
-                fp.close();
-              
-              return res;
-          }
-      }
-      
-      virtual bool typeIsAvailable() { return false; }
-    };
-
-    
+   
     template <class T>
     ImageFileHandler<T> *getHandlerForExtension(const string &fileExt);
     template <class T>

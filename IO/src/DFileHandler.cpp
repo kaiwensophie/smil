@@ -27,29 +27,29 @@
  */
 
 
-#include "IO/include/DFileManager.h"
+#include "IO/include/DFileHandler.h"
 
 namespace smil
 {
   
-   FileManager::FileManager()
+   FileHandler::FileHandler()
       : stream(NULL), _open(false)
     {
     }
     
-    FileManager::FileManager(const char* filename, ios_base::openmode mode)
+    FileHandler::FileHandler(const char* filename, ios_base::openmode mode)
       : stream(NULL), _open(false)
     {
         open(filename, mode);
     }
         
-    FileManager::~FileManager()
+    FileHandler::~FileHandler()
     {
         close();
     }
     
     
-    RES_T FileManager::open(const char* filename,  ios_base::openmode mode)
+    RES_T FileHandler::open(const char* filename,  ios_base::openmode mode)
     {
         fileName = filename;
         fileExtension = getFileExtension(fileName);
@@ -88,7 +88,7 @@ namespace smil
         return RES_OK;
     }
     
-    void FileManager::close()
+    void FileHandler::close()
     {
         if (!_open)
           return;

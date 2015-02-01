@@ -43,186 +43,50 @@ namespace smil
     * \addtogroup IO
     */
     /*@{*/
-    
-    RES_T readNetPBMFileInfo(istream &st, ImageFileInfo &fInfo);
-    RES_T readNetPBMFileInfo(const char* filename, ImageFileInfo &fInfo);
-    RES_T writeNetPBMFileInfo(ImageFileInfo &fInfo, ostream &ost);
-    
-    template <class T> class Image;
 
+    RES_T readNetPBMHeader(istream &st, ImageFileHeader &header);
+    RES_T writeNetPBMHeader(ImageFileHeader &header, const char *fileName, const int maxValue, ostream &ost);
+    
     template <class T, typename Enable=T>
-    class PGMImageFileHandler : public ImageFileHandler<T>
+    class PGM_FileHandler : public ImageFileHandler<T>
     {
       public:
-        PGMImageFileHandler()
-          : ImageFileHandler<T>("PGM")
+        virtual RES_T readHeader()
         {
+            return readNetPBMHeader(this->getStream(), this->header);
         }
-        
-        virtual RES_T readHeader(istream &stream, ImageFileInfo &fInfo)
-        {
-            return readNetPBMFileInfo(stream, fInfo);
-        }
-    };
-
+    };    
+    
     template <class T>
-    class PGMImageFileHandler<T, ENABLE_IF( IS_SAME(T, UINT8) , T ) >  
-      : public PGMImageFileHandler<T,void>
+    class PGM_FileHandler<T, ENABLE_IF( IS_SAME(T, UINT8), T )> : public PGM_FileHandler<T,void>
     {
       public:
-        
         virtual bool typeIsAvailable() { return true; }
-        
-        virtual RES_T read(istream &ist, Image<T> &image);
-        virtual RES_T write(const Image<T> &image, ostream  &ost);
-    };
 
+        virtual RES_T readData(Image<T> &image);
+        virtual RES_T writeData(const Image<T> &image);
+    };    
     
-    
-    template <class T=void, typename Enable=T>
-    class PBMImageFileHandler : public ImageFileHandler<T>
+    template <class T, typename Enable=T>
+    class PBM_FileHandler : public ImageFileHandler<T>
     {
       public:
-        PBMImageFileHandler()
-          : ImageFileHandler<T>("PGM")
+        virtual RES_T readHeader()
         {
+            return readNetPBMHeader(this->getStream(), this->header);
         }
-        
-        virtual RES_T getFileInfo(const char* filename, ImageFileInfo &fInfo)
-        {
-            return readNetPBMFileInfo(filename, fInfo);
-        }
-        
-    };
+    };    
     
-    template <class T>  
-    class PBMImageFileHandler< T, ENABLE_IF( IS_SAME(T, UINT8), T ) > 
-      : public ImageFileHandler<T>
+    template <class T>
+    class PBM_FileHandler<T, ENABLE_IF( IS_SAME(T, UINT8), T )> : public PGM_FileHandler<T,void>
     {
       public:
-        PBMImageFileHandler()
-          : ImageFileHandler<T>("PBM")
-        {
-        }
-        
-        virtual RES_T getFileInfo(const char* filename, ImageFileInfo &fInfo)
-        {
-            return readNetPBMFileInfo(filename, fInfo);
-        }
-        
-        virtual RES_T read(istream &ist, Image<T> &image)
-        {
-            ImageFileInfo fInfo;
-            ASSERT(readNetPBMFileInfo(ist, fInfo)==RES_OK, RES_ERR_IO);
-            ASSERT(fInfo.colorType==ImageFileInfo::COLOR_TYPE_BINARY, "Not an binary image", RES_ERR_IO);
-            
-            int width = fInfo.width;
-            int height = fInfo.height;
+        virtual bool typeIsAvailable() { return true; }
 
-            ASSERT((image.setSize(width, height)==RES_OK), RES_ERR_BAD_ALLOCATION);
-            
-            if (fInfo.fileType==ImageFileInfo::FILE_TYPE_BINARY)
-            {
-                typename ImDtTypes<T>::sliceType lines = image.getLines();
-                
-                char val;
-                int k;
-                
-                for (size_t j=0;j<height;j++)
-                {
-                    typename ImDtTypes<T>::lineType pixels = lines[j];
-                    
-                    for (int i=0;i<width;i++)
-                    {
-                        if (i%8 == 0)
-                          ist.read(&val, 1);
-                        
-                        k = 7 - i%8;
-                        pixels[i] = ( ( val >> k )%2 )==0 ? T(0) : ImDtTypes<T>::max();
-                    }
-                }
-            }
-            else
-            {
-                typename ImDtTypes<T>::lineType pixels = image.getPixels();
-                
-                int val;
-                for (size_t i=0;i<image.getPixelCount();i++)
-                {
-                    ist >> val;
-                    pixels[i] = val==0 ? T(0) : ImDtTypes<T>::max();
-                }
-            }
-            
-            
-            return RES_OK;
-        }
-        virtual RES_T write(const Image<T> &image, ostream &ost)
-        {
-            int width = image.getWidth();
-            int height = image.getHeight();
-            
-            ImageFileInfo fInfo;
-            fInfo.width = width;
-            fInfo.height = height;
-            fInfo.colorType = ImageFileInfo::COLOR_TYPE_BINARY;
-            
-            writeNetPBMFileInfo(fInfo, ost);
-            
-            char val;
-            int k;
-            typename ImDtTypes<T>::sliceType lines = image.getLines();
-            
-            for (size_t j=0;j<height;j++)
-            {
-                typename ImDtTypes<T>::lineType pixels = lines[j];
-                val = 0;
-                
-                for (int i=0;i<width;i++)
-                {
-                    k = 7 - i%8;
-                    
-                    if (pixels[i]!=0)
-                      val |= ( 1L << k );
-                    
-                    if (i>0 && i%8 == 0)
-                    {
-                        ost.write(&val, 1);
-                        val = 0;
-                    }
-                }
-                if (k!=7)
-                  ost.write(&val, 1);
-            }
-            
-            return RES_OK;
-        }
-    };
-
-//     template <>
-//     inline RES_T PBMImageFileHandler<void>::read(const char *, Image<void> &)
-//     {
-//         return RES_ERR;
-//     }
-// 
-//     template <>
-//     inline RES_T PBMImageFileHandler<void>::write(const Image<void> &, const char *)
-//     {
-//         return RES_ERR;
-//     }
+//         virtual RES_T readData(Image<T> &image);
+//         virtual RES_T writeData(const Image<T> &image);
+    };    
     
-    // Specializations
-//     template <>
-//     RES_T PGMImageFileHandler<UINT8>::read(const char *filename, Image<UINT8> &image);
-//     template <>
-//     RES_T PGMImageFileHandler<UINT8>::write(const Image<UINT8> &image, const char *filename);
-
-#ifdef SMIL_WRAP_RGB    
-//     template <>
-//     RES_T PGMImageFileHandler<RGB>::read(const char *filename, Image<RGB> &image);
-//     template <>
-//     RES_T PGMImageFileHandler<RGB>::write(const Image<RGB> &image, const char *filename);
-#endif // SMIL_WRAP_RGB    
     
 /*@}*/
 

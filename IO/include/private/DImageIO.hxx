@@ -65,32 +65,32 @@ namespace smil
     ImageFileHandler<T> *getHandlerForExtension(const string &fileExt)
     {
         
-        if (fileExt=="BMP")
-            return new BMPImageFileHandler<T>();
-
-    #ifdef USE_PNG
-        else if (fileExt=="PNG")
-            return new PNGImageFileHandler<T>();
-    #endif // USE_PNG
-
-    #ifdef USE_JPEG
-        else if (fileExt=="JPG")
-            return new JPGImageFileHandler<T>();
-    #endif // USE_JPEG
-
-    #ifdef USE_TIFF
-        else if (fileExt=="TIF")
-            return new TIFFImageFileHandler<T>();
-    #endif // USE_TIFF
-
-        else if (fileExt=="VTK")
-            return new VTKImageFileHandler<T>();
+//         if (fileExt=="BMP")
+//             return new BMPImageFileHandler<T>();
+// 
+//     #ifdef USE_PNG
+//         else if (fileExt=="PNG")
+//             return new PNGImageFileHandler<T>();
+//     #endif // USE_PNG
+// 
+//     #ifdef USE_JPEG
+//         else if (fileExt=="JPG")
+//             return new JPGImageFileHandler<T>();
+//     #endif // USE_JPEG
+// 
+//     #ifdef USE_TIFF
+//         else if (fileExt=="TIF")
+//             return new TIFFImageFileHandler<T>();
+//     #endif // USE_TIFF
+// 
+//         else if (fileExt=="VTK")
+//             return new VTKImageFileHandler<T>();
         
-        else if (fileExt=="PGM")
-            return new PGMImageFileHandler<T>();
+        /*else*/ if (fileExt=="PGM")
+            return new PGM_FileHandler<T>();
         
-        else if (fileExt=="PBM")
-            return new PBMImageFileHandler<T>();
+//         else if (fileExt=="PBM")
+//             return new PBMImageFileHandler<T>();
         
         else
         {
@@ -114,44 +114,15 @@ namespace smil
     RES_T read(const char *filename, Image<T> &image)
     {
         string fileExt = getFileExtension(filename);
-        string filePrefix = (string(filename).substr(0, 7));
 
-        RES_T res;
-
-        if (filePrefix=="http://")
-        {
-    #ifdef USE_CURL
-            stringstream ss;
-            if (getHttpFile(filename, ss)!=RES_OK)
-            {
-                ERR_MSG(string("Error downloading file ") + filename);
-                return RES_ERR_IO;
-            }
-            auto_ptr< ImageFileHandler<T> > fHandler(getHandlerForExtension<T>(fileExt));
-            
-            if (fHandler.get())
-              return fHandler->read(ss, image);
-            else return RES_ERR;
-
-    #else // USE_CURL
-            ERR_MSG("Error: to use this functionality you must compile SMIL with the Curl option");
-            return RES_ERR_IO;
-    #endif // USE_CURL
-        }
-        else if (filePrefix=="file://")
-        {
-            string fName = filename;
-            string buf = fName.substr(7, fName.length()-7);
-            return read(buf.c_str(), image);
-        }
-        else
-        {
-            auto_ptr< ImageFileHandler<T> > fHandler(getHandlerForExtension<T>(fileExt));
-            
-            if (fHandler.get())
-              return fHandler->read(filename, image);
-            else return RES_ERR_IO;
-        }
+        auto_ptr< ImageFileHandler<T> > fileHandler(getHandlerForExtension<T>(fileExt));
+        
+        if (!fileHandler.get())
+          return RES_ERR_NOT_IMPLEMENTED;
+        
+        ASSERT(fileHandler->open(filename)==RES_OK)
+        
+        return fileHandler->read(image);
     }
 
     
@@ -200,7 +171,7 @@ namespace smil
     {
         string fileExt = getFileExtension(filename);
         
-        auto_ptr< ImageFileHandler<T> > fHandler(getHandlerForFile<T>(filename));
+        auto_ptr< ImageFileHandler<T> > fHandler(getHandlerForExtension<T>(fileExt));
         
         if (fHandler.get())
           return fHandler->write(image, filename);

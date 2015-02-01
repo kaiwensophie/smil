@@ -82,7 +82,7 @@ class Test_NetPBM : public TestCase
                  6, 18, 19 };
     im1 << tab_g;
     
-    PGMImageFileHandler<T> gHandler;
+    PGM_FileHandler<T> gHandler;
     
     TEST_ASSERT( gHandler.write(im1, stream)==RES_OK );
     TEST_ASSERT( gHandler.read(stream, im2)==RES_OK );
@@ -102,7 +102,7 @@ class Test_NetPBM : public TestCase
                  255, 0, 0 };
     im1 << tab_b;
     
-    PBMImageFileHandler<T> bHandler;
+    PBM_FileHandler<T> bHandler;
     
     TEST_ASSERT( bHandler.write(im1, stream)==RES_OK );
     TEST_ASSERT( bHandler.read(stream, im2)==RES_OK );
@@ -119,110 +119,16 @@ class Test_NetPBM : public TestCase
   }
 };
 
-        
-
-
-    template <class T, typename Enable=T>
-    class PGM_ImageFileManager : public ImageFileManager<T>
-    {
-      public:
-        virtual RES_T readHeader()
-        {
-            istream &fp = this->getStream();
-            std::string buf;
-
-            getline(fp, buf);
-            
-            if ( (buf[0]!='P' && buf[0]!='p'))
-            {
-                ERR_MSG("Error reading NetPBM header");
-                return RES_ERR_IO;
-            }
-            
-            int pbmFileType;
-            pbmFileType = atoi(buf.data()+1);
-            
-            switch(pbmFileType)
-            {
-              case 1: // Portable BitMap ASCII
-                this->header.colorType = ImageFileHeader::COLOR_TYPE_BINARY;
-                this->header.fileType = ImageFileHeader::FILE_TYPE_ASCII;
-                this->header.channels = 1;
-                break;
-              case 2: // Portable GrayMap ASCII
-                this->header.colorType = ImageFileHeader::COLOR_TYPE_GRAY;
-                this->header.fileType = ImageFileHeader::FILE_TYPE_ASCII;
-                this->header.channels = 1;
-                break;
-              case 3: // Portable PixMap ASCII
-                this->header.colorType = ImageFileHeader::COLOR_TYPE_RGB;
-                this->header.fileType = ImageFileHeader::FILE_TYPE_ASCII;
-                this->header.channels = 3;
-                break;
-              case 4: // Portable BitMap ASCII
-                this->header.colorType = ImageFileHeader::COLOR_TYPE_BINARY;
-                this->header.fileType = ImageFileHeader::FILE_TYPE_BINARY;
-                this->header.channels = 1;
-                break;
-              case 5: // Portable GrayMap ASCII
-                this->header.colorType = ImageFileHeader::COLOR_TYPE_GRAY;
-                this->header.fileType = ImageFileHeader::FILE_TYPE_BINARY;
-                this->header.channels = 1;
-                break;
-              case 6: // Portable PixMap ASCII
-                this->header.colorType = ImageFileHeader::COLOR_TYPE_RGB;
-                this->header.fileType = ImageFileHeader::FILE_TYPE_BINARY;
-                this->header.channels = 3;
-                break;
-              default:
-                ERR_MSG("Unknown NetPBM format");
-                return RES_ERR_IO;
-            }
-            
-            streampos curpos;
-            // Read comments
-            do
-            {
-                curpos = fp.tellg();
-                getline(fp, buf);
-            } while(buf[0]=='#');
-            
-            // Read image dimensions
-            fp.seekg(curpos);
-            fp >> this->header.width >> this->header.height;
-            
-            if (this->header.colorType!=ImageFileHeader::COLOR_TYPE_BINARY)
-            {
-                int dum;
-                fp >> dum; // Max pixel value
-            }
-            
-            fp.seekg(1, ios_base::cur); // endl
-            
-            this->header.dataStartPos = fp.tellg();
-            this->header.scalarType = ImageFileHeader::SCALAR_TYPE_UINT8;
-            
-            return RES_OK;
-        }
-    };    
-    
-    template <class T>
-    class PGM_ImageFileManager<T, ENABLE_IF( IS_SAME(T, UINT8), T )> : public PGM_ImageFileManager<T,void>
-    {
-      public:
-        virtual bool typeIsAvailable() { return true; }
-    };    
-    
     
 int main(int argc, char *argv[])
 {
     typedef UINT8 T;
     Image<T> im1;
-    BaseImageFileManager *fp = new PGM_ImageFileManager<T>();
+    BaseImageFileHandler *fp = new PGM_FileHandler<T>();
     
     fp->open("http://cmm.ensmp.fr/~faessel/smil/images/coins.pgm");
     fp->read(im1);
-//     FileManager fp("file://cmm.ensmp.fr/~faessel/smil/images/lena.png", ios_base::binary);
+//     FileHandler fp("file://cmm.ensmp.fr/~faessel/smil/images/lena.png", ios_base::binary);
     
 //     istream &is = fp.getStream();
     cout << fp->typeIsAvailable() << endl;

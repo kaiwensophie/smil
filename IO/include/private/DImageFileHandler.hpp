@@ -31,7 +31,7 @@
 #define _D_IMAGE_FILE_MANAGER_HPP
 
 
-#include "IO/include/DFileManager.h"
+#include "IO/include/DFileHandler.h"
 
 
 
@@ -61,25 +61,29 @@ namespace smil
         
         void reset()
         {
+          channels = 1;
           colorType = COLOR_TYPE_UNKNOWN;
           scalarType = SCALAR_TYPE_UNKNOWN;
           fileType = FILE_TYPE_BINARY;
           width = 0;
           height = 0;
-          depth = 0;
+          depth = 1;
           dataStartPos = 0;
         }
     };
     
-    class BaseImageFileManager : public FileManager
+    class BaseImageFileHandler : public FileHandler
     {
     public:
-//         BaseImageFileManager();
-//         FileManager (const char* filename, ios_base::openmode mode = ios_base::in);
-        virtual ~FileManager() {}
+        virtual ~BaseImageFileHandler() {}
         virtual RES_T readHeader() = 0;
+        virtual RES_T writeHeader() = 0;
         virtual RES_T read(BaseImage &image) = 0;
+        virtual RES_T read(iostream &fp, BaseImage &image) = 0;
+        virtual RES_T read(const char *fileName, BaseImage &image) = 0;
         virtual RES_T write(const BaseImage &image) = 0;
+        virtual RES_T write(const BaseImage &image, iostream &fp) = 0;
+        virtual RES_T write(const BaseImage &image, const char *fileName)= 0;
         virtual bool typeIsAvailable() { return false; }
         
         ImageFileHeader header;
@@ -87,37 +91,85 @@ namespace smil
     
     
     template <class T>
-    class ImageFileManager : public BaseImageFileManager
+    class ImageFileHandler : public BaseImageFileHandler
     {
     public:
-//         BaseImageFileManager();
-//         FileManager (const char* filename, ios_base::openmode mode = ios_base::in);
-        virtual ~FileManager() {}
+        virtual ~ImageFileHandler() {}
         virtual bool typeIsAvailable() { return false; }
         virtual RES_T readHeader() { return RES_OK; }
+        virtual RES_T writeHeader() { return RES_OK; }
+        virtual RES_T prepareImage(Image<T> &image)
+        { return RES_OK; }
+        
+        virtual RES_T readData(Image<T> &image) { return RES_OK; }
+        virtual RES_T writeData(const Image<T> &image) { return RES_OK; }
         virtual RES_T read(BaseImage &image) 
         {
             return this->read(static_cast< Image<T>& >(image));
         }
+        virtual RES_T read(iostream &fp, BaseImage &image) 
+        {
+            return this->read(fp, static_cast< Image<T>& >(image));
+        }
+        virtual RES_T read(const char *fileName, BaseImage &image) 
+        {
+            return this->read(fileName, static_cast< Image<T>& >(image));
+        }
         virtual RES_T read(Image<T> &image) 
         {
-            if (!this->_open)
+            if (!typeIsAvailable())
             {
-                ERR_MSG("No file open.");
-                return RES_ERR_IO;
+                cout << "Data type (" << getDataTypeAsString<T>() << ") not supported for ";
+                cout << fileExtension << " files." << endl;
+                return RES_ERR_NOT_IMPLEMENTED;
+            }
+            
+            if (!this->_open && !this->stream)
+            {
+                ERR_MSG("No file/stream open.");
+                return RES_ERR;
             }
             
             ASSERT(readHeader()==RES_OK);
+            ASSERT(readData(image)==RES_OK);
             
-          cout << "derived" << endl;
+            return RES_OK;
+            
         }
+        virtual RES_T read(iostream &fp, Image<T> &image) 
+        {
+            this->stream = &fp;
+        }
+        virtual RES_T read(const char *fileName, Image<T> &image)
+        {
+            if (this->open(fileName, ios_base::in))
+              return this->read(image);
+            else return RES_ERR_IO;
+        }
+        
         virtual RES_T write(const BaseImage &image)
         {
             return this->write(static_cast< const Image<T>& >(image));
         }
-        virtual RES_T write(const Image<T> &image) 
+        virtual RES_T write(const BaseImage &image, iostream &fp)
         {
-          cout << "derived" << endl;
+            return this->write(static_cast< const Image<T>& >(image), fp);
+        }
+        virtual RES_T write(const BaseImage &image, const char *fileName)
+        {
+            return this->write(static_cast< const Image<T>& >(image), fileName);
+        }
+        virtual RES_T write(const Image<T> &image)
+        {
+        }
+        virtual RES_T write(const Image<T> &image, iostream &fp) 
+        {
+        }
+        virtual RES_T write(const Image<T> &image, const char *fileName)
+        {
+            if (this->open(fileName, ios_base::out))
+              return this->write(image);
+            else return RES_ERR_IO;
         }
     };
 

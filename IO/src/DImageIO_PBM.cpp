@@ -37,7 +37,7 @@
 namespace smil
 {
   
-    RES_T readNetPBMFileInfo(istream &fp, ImageFileInfo &fInfo)
+    RES_T readNetPBMHeader(istream &fp, ImageFileHeader &header)
     {
         std::string buf;
 
@@ -54,37 +54,37 @@ namespace smil
         
         switch(pbmFileType)
         {
-          case 1: // Portable BitMap ASCII
-            fInfo.colorType = ImageFileInfo::COLOR_TYPE_BINARY;
-            fInfo.fileType = ImageFileInfo::FILE_TYPE_ASCII;
-            fInfo.channels = 1;
+            case 1: // Portable BitMap ASCII
+            header.colorType = ImageFileHeader::COLOR_TYPE_BINARY;
+            header.fileType = ImageFileHeader::FILE_TYPE_ASCII;
+            header.channels = 1;
             break;
-          case 2: // Portable GrayMap ASCII
-            fInfo.colorType = ImageFileInfo::COLOR_TYPE_GRAY;
-            fInfo.fileType = ImageFileInfo::FILE_TYPE_ASCII;
-            fInfo.channels = 1;
+            case 2: // Portable GrayMap ASCII
+            header.colorType = ImageFileHeader::COLOR_TYPE_GRAY;
+            header.fileType = ImageFileHeader::FILE_TYPE_ASCII;
+            header.channels = 1;
             break;
-          case 3: // Portable PixMap ASCII
-            fInfo.colorType = ImageFileInfo::COLOR_TYPE_RGB;
-            fInfo.fileType = ImageFileInfo::FILE_TYPE_ASCII;
-            fInfo.channels = 3;
+            case 3: // Portable PixMap ASCII
+            header.colorType = ImageFileHeader::COLOR_TYPE_RGB;
+            header.fileType = ImageFileHeader::FILE_TYPE_ASCII;
+            header.channels = 3;
             break;
-          case 4: // Portable BitMap ASCII
-            fInfo.colorType = ImageFileInfo::COLOR_TYPE_BINARY;
-            fInfo.fileType = ImageFileInfo::FILE_TYPE_BINARY;
-            fInfo.channels = 1;
+            case 4: // Portable BitMap ASCII
+            header.colorType = ImageFileHeader::COLOR_TYPE_BINARY;
+            header.fileType = ImageFileHeader::FILE_TYPE_BINARY;
+            header.channels = 1;
             break;
-          case 5: // Portable GrayMap ASCII
-            fInfo.colorType = ImageFileInfo::COLOR_TYPE_GRAY;
-            fInfo.fileType = ImageFileInfo::FILE_TYPE_BINARY;
-            fInfo.channels = 1;
+            case 5: // Portable GrayMap ASCII
+            header.colorType = ImageFileHeader::COLOR_TYPE_GRAY;
+            header.fileType = ImageFileHeader::FILE_TYPE_BINARY;
+            header.channels = 1;
             break;
-          case 6: // Portable PixMap ASCII
-            fInfo.colorType = ImageFileInfo::COLOR_TYPE_RGB;
-            fInfo.fileType = ImageFileInfo::FILE_TYPE_BINARY;
-            fInfo.channels = 3;
+            case 6: // Portable PixMap ASCII
+            header.colorType = ImageFileHeader::COLOR_TYPE_RGB;
+            header.fileType = ImageFileHeader::FILE_TYPE_BINARY;
+            header.channels = 3;
             break;
-          default:
+            default:
             ERR_MSG("Unknown NetPBM format");
             return RES_ERR_IO;
         }
@@ -99,9 +99,9 @@ namespace smil
         
         // Read image dimensions
         fp.seekg(curpos);
-        fp >> fInfo.width >> fInfo.height;
+        fp >> header.width >> header.height;
         
-        if (fInfo.colorType!=ImageFileInfo::COLOR_TYPE_BINARY)
+        if (header.colorType!=ImageFileHeader::COLOR_TYPE_BINARY)
         {
             int dum;
             fp >> dum; // Max pixel value
@@ -109,77 +109,62 @@ namespace smil
         
         fp.seekg(1, ios_base::cur); // endl
         
-        fInfo.dataStartPos = fp.tellg();
-        fInfo.scalarType = ImageFileInfo::SCALAR_TYPE_UINT8;
+        header.dataStartPos = fp.tellg();
+        header.scalarType = ImageFileHeader::SCALAR_TYPE_UINT8;
         
         return RES_OK;
     }
     
-    RES_T readNetPBMFileInfo(const char* filename, ImageFileInfo &fInfo)
-    {
-        /* open image file */
-        ifstream fp(filename, ios_base::binary);
-        
-        if (!fp.is_open())
-        {
-            cout << "Cannot open file " << filename << endl;
-            return RES_ERR_IO;
-        }
-        
-        RES_T ret = readNetPBMFileInfo(fp, fInfo);
-        
-        fp.close();
-        return ret;
-    }
     
-    RES_T writeNetPBMFileInfo(ImageFileInfo &fInfo, ostream &ost)
+    RES_T writeNetPBMHeader(ImageFileHeader &header, const char *fileName, const int maxValue, ostream &ost)
     {
         ost << "P";
         
-        switch(fInfo.colorType)
+        switch(header.colorType)
         {
-          case ImageFileInfo::COLOR_TYPE_BINARY:
+          case ImageFileHeader::COLOR_TYPE_BINARY:
             ost << "4" << endl;
             break;
-          case ImageFileInfo::COLOR_TYPE_GRAY:
+          case ImageFileHeader::COLOR_TYPE_GRAY:
             ost << "5" << endl;
             break;
-          case ImageFileInfo::COLOR_TYPE_RGB:
+          case ImageFileHeader::COLOR_TYPE_RGB:
             ost << "6" << endl;
             break;
         }
-        ost << "# " << fInfo.fileName << endl;
-        ost << fInfo.width << " " << fInfo.height << endl;
+        ost << "# " << fileName << endl;
+        ost << header.width << " " << header.height << endl;
         
         // Max pixel val
-        if (fInfo.colorType!=ImageFileInfo::COLOR_TYPE_BINARY)
-          ost << (int)fInfo.miscData << endl;
+        if (header.colorType!=ImageFileHeader::COLOR_TYPE_BINARY)
+          ost << maxValue << endl;
         
         return RES_OK;
     }
     
     template <>
-    RES_T PGMImageFileHandler<UINT8>::read(istream &ist, Image<UINT8> &image)
+    RES_T PGM_FileHandler<UINT8>::readData(Image<UINT8> &image)
     {
-        ImageFileInfo fInfo;
-        ASSERT(readNetPBMFileInfo(ist, fInfo)==RES_OK, RES_ERR_IO);
-        ASSERT(fInfo.colorType==ImageFileInfo::COLOR_TYPE_GRAY, "Not an 8bit gray image", RES_ERR_IO);
+        istream &fp = this->getStream();
+        ImageFileHeader &header = this->header;
         
-        int width = fInfo.width;
-        int height = fInfo.height;
+        ASSERT(this->header.colorType==ImageFileHeader::COLOR_TYPE_GRAY, "Not an 8bit gray image", RES_ERR_IO);
+        
+        int width = header.width;
+        int height = header.height;
 
         ASSERT((image.setSize(width, height)==RES_OK), RES_ERR_BAD_ALLOCATION);
         
-        if (fInfo.fileType==ImageFileInfo::FILE_TYPE_BINARY)
+        if (header.fileType==ImageFileHeader::FILE_TYPE_BINARY)
         {
-            ist.read((char*)image.getPixels(), width*height);
+            fp.read((char*)image.getPixels(), width*height);
         }
         else
         {
             ImDtTypes<UINT8>::lineType pixels = image.getPixels();
             
             for (size_t i=0;i<image.getPixelCount();i++, pixels++)
-              ist >> *((int*)pixels);
+              fp >> *((int*)pixels);
         }
         
         return RES_OK;
@@ -187,130 +172,24 @@ namespace smil
 
 
     template <>
-    RES_T PGMImageFileHandler<UINT8>::write(const Image<UINT8> &image, ostream &ost)
+    RES_T PGM_FileHandler<UINT8>::writeData(const Image<UINT8> &image)
     {
+        ostream &fp = this->getStream();
+        
         size_t width = image.getWidth(), height = image.getHeight();
         
-        ost << "P5" << endl;
-        ost << "# " << image.getName() << endl;
-        ost << width << " " << height << endl;
-        ost << (int)maxVal(image) << endl;
+        fp << "P5" << endl;
+        fp << "# " << image.getName() << endl;
+        fp << width << " " << height << endl;
+        fp << (int)maxVal(image) << endl;
         
-        ost.write((char*)image.getPixels(), width*height);
+        fp.write((char*)image.getPixels(), width*height);
         
         return RES_OK;
     }
     
     
 #ifdef SMIL_WRAP_RGB      
-//     template <>
-//     RES_T PGMImageFileHandler<RGB>::read(const char *filename, Image<RGB> &image)
-//     {
-//         FILE *fp = fopen( filename, "rb" );
-// 
-//         ASSERT(fp!=NULL, string("Cannot open file ") + filename + " for input", RES_ERR_IO);
-//         
-//         FileCloser fc(fp);
-//         
-//         PBMHeader hStruct;
-//         
-//         ASSERT(readPBMHeader(fp, hStruct)==RES_OK);
-//         
-//         bmpFileHeader &fHeader = hStruct.fHeader;
-//         bmpInfoHeader &iHeader = hStruct.iHeader;
-//         
-//         ASSERT(iHeader.biBitCount==24, "Not an 32bit RGB image", RES_ERR_IO);
-//         
-//         fseek(fp, fHeader.bfOffBits, SEEK_SET);
-// 
-//         int width = iHeader.biWidth;
-//         int height = iHeader.biHeight;
-// 
-//         ASSERT((image.setSize(width, height)==RES_OK), RES_ERR_BAD_ALLOCATION);
-//         
-//         Image<RGB>::sliceType lines = image.getLines();
-//         MultichannelArray<UINT8,3>::lineType *arrays;
-//         UINT8 *data = new UINT8[width*3];
-// 
-//         for (int j=height-1;j>=0;j--)
-//         {
-//             arrays = lines[j].arrays;
-//             ASSERT((fread(data, width*3, 1, fp)!=0), RES_ERR_IO);
-//             for (int i=0;i<width;i++)
-//               for (UINT n=0;n<3;n++)
-//                 arrays[n][i] = data[3*i+(2-n)];
-//         }
-//         
-//         delete[] data;
-//         
-//         image.modified();
-// 
-//         return RES_OK;
-//     }
-#endif // SMIL_WRAP_RGB  
-
-
-#ifdef SMIL_WRAP_RGB  
-//     template <>
-//     RES_T PGMImageFileHandler<RGB>::write(const Image<RGB> &image, const char *filename)
-//     {
-//         FILE* fp = fopen( filename, "wb" );
-// 
-//         if ( fp == NULL )
-//         {
-//             cout << "Error: Cannot open file " << filename << " for output." << endl;
-//             return RES_ERR;
-//         }
-//         bmpFileHeader fHeader;
-//         bmpInfoHeader iHeader;
-// 
-//         size_t width = image.getWidth();
-//         size_t height = image.getHeight();
-// 
-//         fHeader.bfType = 0x4D42;
-//         fHeader.bfSize = (UINT32)(width*height*3*sizeof(UINT8)) + sizeof(bmpFileHeader) + sizeof(bmpInfoHeader);
-//         fHeader.bfReserved1 = 0;
-//         fHeader.bfReserved2 = 0;
-//         fHeader.bfOffBits = sizeof(bmpFileHeader) + sizeof(bmpInfoHeader);
-// 
-//         iHeader.biSize = sizeof(bmpInfoHeader);  // number of bytes required by the struct
-//         iHeader.biWidth = (UINT32)width;  // width in pixels
-//         iHeader.biHeight = (UINT32)height;  // height in pixels
-//         iHeader.biPlanes = 1; // number of color planes, must be 1
-//         iHeader.biBitCount = 24; // number of bit per pixel
-//         iHeader.biCompression = 0;// type of compression
-// 
-// 
-//         //write the bitmap file header
-//         fwrite(&fHeader, sizeof(bmpFileHeader), 1 ,fp);
-// 
-//         //write the bitmap image header
-//         fwrite(&iHeader, sizeof(bmpInfoHeader), 1 ,fp);
-// 
-//         Image<RGB>::sliceType lines = image.getLines();
-//         MultichannelArray<UINT8,3>::lineType *arrays;
-//         UINT8 *data = new UINT8[width*3];
-// 
-//         for (int j=height-1;j>=0;j--)
-//         {
-//             arrays = lines[j].arrays;
-//             for (size_t i=0;i<width;i++)
-//               for (UINT n=0;n<3;n++)
-//                 data[3*i+(2-n)] = arrays[n][i];
-//             ASSERT((fwrite(data, width*3, 1, fp)!=0), RES_ERR_IO);
-//         }
-//         
-//         delete[] data;
-//         
-// //         Image<UINT8>::lineType *lines = image.getLines();
-// // 
-// //         for (size_t i=height-1;i>=0;i--)
-// //             fwrite(lines[i], width*sizeof(UINT8), 1, fp);
-// 
-//         fclose(fp);
-
-//         return RES_OK;
-//     }
 #endif // SMIL_WRAP_RGB  
 
 } // namespace smil
