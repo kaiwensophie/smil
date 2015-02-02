@@ -110,7 +110,7 @@ namespace smil
         fp.seekg(1, ios_base::cur); // endl
         
         header.dataStartPos = fp.tellg();
-        header.scalarType = ImageFileHeader::SCALAR_TYPE_UINT8;
+        header.scalarType = DtUINT8;
         
         return RES_OK;
     }
@@ -153,8 +153,6 @@ namespace smil
         int width = header.width;
         int height = header.height;
 
-        ASSERT((image.setSize(width, height)==RES_OK), RES_ERR_BAD_ALLOCATION);
-        
         if (header.fileType==ImageFileHeader::FILE_TYPE_BINARY)
         {
             fp.read((char*)image.getPixels(), width*height);
@@ -177,11 +175,6 @@ namespace smil
         ostream &fp = this->getStream();
         
         size_t width = image.getWidth(), height = image.getHeight();
-        
-        fp << "P5" << endl;
-        fp << "# " << image.getName() << endl;
-        fp << width << " " << height << endl;
-        fp << (int)maxVal(image) << endl;
         
         fp.write((char*)image.getPixels(), width*height);
         

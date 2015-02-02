@@ -69,9 +69,28 @@ namespace smil
 
     enum DType
     {
-        DtUINT8, DtUINT16, DtUINT32, DtUINT64, DtINT, DtUINT
+        DtUINT8, DtUINT16, DtUINT32, DtUINT64, DtINT8, DtINT16, DtINT32, DtINT64, DtDOUBLE, DtFLOAT, DtBIT, DtUNKNOWN
     };
 
+    template <class T>
+    inline DType getDataTypeEquiv(T *val=NULL)
+    {
+        return DtUNKNOWN;
+    }
+
+    #define DECL_DATA_TYPE_EQU(_type, equ) \
+    template <> \
+    inline DType getDataTypeEquiv(_type *) { return equ; }
+
+    DECL_DATA_TYPE_EQU(UINT8, DtUINT8)
+    DECL_DATA_TYPE_EQU(UINT16, DtUINT16)
+    DECL_DATA_TYPE_EQU(UINT32, DtUINT32)
+    DECL_DATA_TYPE_EQU(UINT64, DtUINT64)
+    DECL_DATA_TYPE_EQU(INT8, DtINT8)
+    DECL_DATA_TYPE_EQU(INT16, DtINT16)
+    DECL_DATA_TYPE_EQU(INT32, DtINT32)
+    DECL_DATA_TYPE_EQU(float, DtFLOAT)
+    DECL_DATA_TYPE_EQU(double, DtDOUBLE)
     
     template <class T>
     struct ImDtTypes

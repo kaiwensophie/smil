@@ -49,26 +49,53 @@ namespace smil
         {
             reset();
         }
+        template <class T>
+        ImageFileHeader(const Image<T> &image)
+        {
+            getFromImage<T>(image);
+        }
+        
+        template <class T>
+        RES_T getFromImage(const Image<T> &image)
+        {
+            channels = 1;
+            colorType = COLOR_TYPE_GRAY;
+            scalarType = getDataTypeEquiv<T>();
+            fileType = FILE_TYPE_BINARY;
+            width = image.getWidth();
+            height = image.getHeight();
+            depth = image.getDepth();
+            dataStartPos = 0;
+            
+            return RES_OK;
+        }
+        template <class T>
+        RES_T applyToImage(Image<T> &image)
+        {
+            ASSERT(image.setSize(width, height, depth)==RES_OK, RES_ERR_BAD_ALLOCATION)
+            
+            return RES_OK;
+        }
+        
         enum ColorType { COLOR_TYPE_GRAY, COLOR_TYPE_RGB, COLOR_TYPE_GA, COLOR_TYPE_RGBA, COLOR_TYPE_BINARY, COLOR_TYPE_UNKNOWN };
-        enum ScalarType { SCALAR_TYPE_UINT8, SCALAR_TYPE_UINT16, SCALAR_TYPE_INT8, SCALAR_TYPE_INT16, SCALAR_TYPE_FLOAT, SCALAR_TYPE_DOUBLE, SCALAR_TYPE_UNKNOWN };
         enum FileType { FILE_TYPE_ASCII, FILE_TYPE_BINARY };
         UINT channels;
         ColorType colorType;
-        ScalarType scalarType;
+        DType scalarType;
         FileType fileType;
         size_t width, height, depth;
         streampos dataStartPos;
         
         void reset()
         {
-          channels = 1;
-          colorType = COLOR_TYPE_UNKNOWN;
-          scalarType = SCALAR_TYPE_UNKNOWN;
-          fileType = FILE_TYPE_BINARY;
-          width = 0;
-          height = 0;
-          depth = 1;
-          dataStartPos = 0;
+            channels = 1;
+            colorType = COLOR_TYPE_UNKNOWN;
+            scalarType = DtUNKNOWN;
+            fileType = FILE_TYPE_BINARY;
+            width = 0;
+            height = 0;
+            depth = 1;
+            dataStartPos = 0;
         }
     };
     
@@ -96,13 +123,29 @@ namespace smil
     public:
         virtual ~ImageFileHandler() {}
         virtual bool typeIsAvailable() { return false; }
-        virtual RES_T readHeader() { return RES_OK; }
-        virtual RES_T writeHeader() { return RES_OK; }
-        virtual RES_T prepareImage(Image<T> &image)
-        { return RES_OK; }
+        virtual RES_T readHeader() { Image<T> *im = NULL; return readHeader(*im); }
+        virtual RES_T writeHeader() { Image<T> *im = NULL; return writeHeader(*im); }
         
-        virtual RES_T readData(Image<T> &image) { return RES_OK; }
-        virtual RES_T writeData(const Image<T> &image) { return RES_OK; }
+        // Read the file header and apply it to an image if provided
+        virtual RES_T readHeader(Image<T> &image=NULL)
+        {
+            if (&image)
+              return this->header.applyToImage(image);
+            else 
+              return RES_OK;
+        }
+        // Write the file header (with data from an image if provided)
+        virtual RES_T writeHeader(const Image<T> &image=NULL)
+        {
+            if (&image)
+              return this->header.getFromImage(image);
+            else 
+              return RES_OK;
+        }
+        
+        virtual RES_T readData(Image<T> &image) = 0;
+        virtual RES_T writeData(const Image<T> &image) =  0;
+        
         virtual RES_T read(BaseImage &image) 
         {
             return this->read(static_cast< Image<T>& >(image));
@@ -130,8 +173,8 @@ namespace smil
                 return RES_ERR;
             }
             
-            ASSERT(readHeader()==RES_OK);
-            ASSERT(readData(image)==RES_OK);
+            ASSERT(readHeader(image)==RES_OK)
+            ASSERT(readData(image)==RES_OK)
             
             return RES_OK;
             
@@ -139,6 +182,7 @@ namespace smil
         virtual RES_T read(iostream &fp, Image<T> &image) 
         {
             this->stream = &fp;
+            return read(image);
         }
         virtual RES_T read(const char *fileName, Image<T> &image)
         {
@@ -161,9 +205,28 @@ namespace smil
         }
         virtual RES_T write(const Image<T> &image)
         {
+            if (!typeIsAvailable())
+            {
+                cout << "Data type (" << getDataTypeAsString<T>() << ") not supported for ";
+                cout << fileExtension << " files." << endl;
+                return RES_ERR_NOT_IMPLEMENTED;
+            }
+            
+            if (!this->_open && !this->stream)
+            {
+                ERR_MSG("No file/stream open.");
+                return RES_ERR;
+            }
+            
+            ASSERT(writeHeader(image)==RES_OK)
+            ASSERT(writeData(image)==RES_OK)
+            
+            return RES_OK;
         }
         virtual RES_T write(const Image<T> &image, iostream &fp) 
         {
+            this->stream = &fp;
+            return write(image);
         }
         virtual RES_T write(const Image<T> &image, const char *fileName)
         {

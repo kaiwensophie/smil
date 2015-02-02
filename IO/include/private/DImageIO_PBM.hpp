@@ -51,10 +51,23 @@ namespace smil
     class PGM_FileHandler : public ImageFileHandler<T>
     {
       public:
-        virtual RES_T readHeader()
+        virtual RES_T readHeader(Image<T> &image=NULL)
         {
-            return readNetPBMHeader(this->getStream(), this->header);
+            ASSERT(readNetPBMHeader(this->getStream(), this->header)==RES_OK)
+            
+            return ImageFileHandler<T>::readHeader(image);
         }
+        virtual RES_T writeHeader(const Image<T> &image=NULL)
+        {
+            ASSERT(ImageFileHandler<T>::writeHeader(image)==RES_OK)
+            
+            if (&image)
+              imageMaxVal = maxVal(image);
+            
+            return writeNetPBMHeader(this->header, this->fileName.c_str(), imageMaxVal, this->getStream());
+        }
+        
+        int imageMaxVal;
     };    
     
     template <class T>
@@ -83,8 +96,8 @@ namespace smil
       public:
         virtual bool typeIsAvailable() { return true; }
 
-//         virtual RES_T readData(Image<T> &image);
-//         virtual RES_T writeData(const Image<T> &image);
+        virtual RES_T readData(Image<T> &image) {}
+        virtual RES_T writeData(const Image<T> &image) {}
     };    
     
     
