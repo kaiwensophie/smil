@@ -43,48 +43,40 @@ namespace smil
     */
     /*@{*/
     
-    struct BMPHeader;
     
-    RES_T getBMPFileInfo(const char* filename, ImageFileInfo &fInfo);
+    RES_T readBMPHeader(istream &fp, ImageFileHeader &header);
+    RES_T writeBMPHeader(ImageFileHeader &header, ostream &fp);
     
-    template <class T> class Image;
-
-    template <class T=void>
-    class BMPImageFileHandler : public ImageFileHandler<T>
+    template <class T, typename Enable=T>
+    class BMP_FileHandler : public ImageFileHandler<T>
     {
       public:
-        BMPImageFileHandler()
-          : ImageFileHandler<T>("BMP")
+        
+        virtual RES_T readHeader(Image<T> &image=NULL)
         {
+            ASSERT(readBMPHeader(this->getStream(), this->header)==RES_OK)
+            
+            return ImageFileHandler<T>::readHeader(image); // Apply header to image
+        }
+        virtual RES_T writeHeader(const Image<T> &image=NULL)
+        {
+            ASSERT(ImageFileHandler<T>::writeHeader(image)==RES_OK) // Get header infos from image
+            return writeBMPHeader(this->header, this->getStream());
         }
         
-        virtual RES_T getFileInfo(const char* filename, ImageFileInfo &fInfo)
-        {
-            return getBMPFileInfo(filename, fInfo);
-        }
         
-        virtual RES_T read(const char* filename, Image<T> &image)
-        {
-            return ImageFileHandler<T>::read(filename, image);
-        }
-        virtual RES_T write(const Image<T> &image, const char* filename)
-        {
-            return ImageFileHandler<T>::write(image, filename);
-        }
     };
 
-    // Specializations
-    template <>
-    RES_T BMPImageFileHandler<UINT8>::read(const char *filename, Image<UINT8> &image);
-    template <>
-    RES_T BMPImageFileHandler<UINT8>::write(const Image<UINT8> &image, const char *filename);
+    template <class T>
+    class BMP_FileHandler<T, ENABLE_IF( IS_SAME(T, UINT8) || IS_SAME(T, RGB) , T )> : public BMP_FileHandler<T,void>
+    {
+      public:
+        virtual bool typeIsAvailable() { return true; }
 
-#ifdef SMIL_WRAP_RGB    
-    template <>
-    RES_T BMPImageFileHandler<RGB>::read(const char *filename, Image<RGB> &image);
-    template <>
-    RES_T BMPImageFileHandler<RGB>::write(const Image<RGB> &image, const char *filename);
-#endif // SMIL_WRAP_RGB    
+        virtual RES_T readData(Image<T> &image);
+        virtual RES_T writeData(const Image<T> &image);
+    };    
+    
     
 /*@}*/
 

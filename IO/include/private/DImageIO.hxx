@@ -65,9 +65,9 @@ namespace smil
     ImageFileHandler<T> *getHandlerForExtension(const string &fileExt)
     {
         
-//         if (fileExt=="BMP")
-//             return new BMPImageFileHandler<T>();
-// 
+        if (fileExt=="BMP")
+            return new BMP_FileHandler<T>();
+
 //     #ifdef USE_PNG
 //         else if (fileExt=="PNG")
 //             return new PNGImageFileHandler<T>();
@@ -86,7 +86,7 @@ namespace smil
 //         else if (fileExt=="VTK")
 //             return new VTKImageFileHandler<T>();
         
-        /*else*/ if (fileExt=="PGM")
+        else if (fileExt=="PGM")
             return new PGM_FileHandler<T>();
         
 //         else if (fileExt=="PBM")

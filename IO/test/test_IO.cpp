@@ -64,6 +64,83 @@ class Test_RW_RAW : public TestCase
   }
 };
 
+class Test_BMP : public TestCase
+{
+  virtual void run()
+  {
+    typedef UINT8 T;
+    stringstream stream;
+    
+    Image<T> im1(3, 6);
+    Image<T> im2;
+    
+    T tab_g[] = { 28, 2, 3,
+                 2, 5, 6,
+                 3, 8, 9,
+                 4, 11, 12,
+                 5, 15, 16,
+                 6, 18, 19 };
+    im1 << tab_g;
+    
+    BMP_FileHandler<T> gHandler;
+    
+    TEST_ASSERT( gHandler.write(im1, stream)==RES_OK );
+    TEST_ASSERT( gHandler.read(stream, im2)==RES_OK );
+    TEST_ASSERT(im1==im2);
+    
+    if (retVal!=RES_OK)
+    {
+        im1.printSelf(1);
+        im2.printSelf(1);
+    }
+    
+    
+    // RGB
+    
+    Image<RGB> im1_rgb(3, 6);
+    Image<RGB> im2_rgb;
+    
+    T tab_rgb[] = { 
+        214, 70, 55,
+        167, 52, 218,
+        241, 20, 26,
+        106, 127, 7,
+        113, 12, 169,
+        192, 8, 240,
+        
+        161, 17, 201,
+        102, 1, 143,
+        221, 110, 182,
+        230, 117, 168,
+        247, 23, 182,
+        87, 64, 26,
+        
+        76, 226, 77,
+        48, 174, 25,
+        166, 166, 158,
+        217, 108, 211,
+        183, 130, 128,
+        19, 139, 240,  
+    };
+    im1_rgb << RGBArray(tab_rgb, 18);
+    
+    BMP_FileHandler<RGB> rgbHandler;
+    stream.str(std::string());
+    
+    TEST_ASSERT( rgbHandler.write(im1_rgb, "tmp.bmp")==RES_OK );
+    TEST_ASSERT( rgbHandler.read(stream, im2_rgb)==RES_OK );
+    TEST_ASSERT(im1_rgb==im2_rgb);
+    
+    if (retVal!=RES_OK)
+    {
+        im1_rgb.printSelf(1);
+        im2_rgb.printSelf(1);
+    }
+    
+    
+  }
+};
+
 class Test_NetPBM : public TestCase
 {
   virtual void run()
@@ -114,30 +191,18 @@ class Test_NetPBM : public TestCase
         im2.printSelf(1);
     }
     
-    
-    im1.load("http://cmm.ensmp.fr/~faessel/smil/images/lena.png");
   }
 };
 
     
 int main(int argc, char *argv[])
 {
-    typedef UINT8 T;
-    Image<T> im1;
-    BaseImageFileHandler *fp = new PGM_FileHandler<T>();
+    Image<UINT8> im;
+//     read("/usr/local/share/Morph-M/Images/Gray/shapes2.bmp", im);
     
-    fp->open("http://cmm.ensmp.fr/~faessel/smil/images/coins.pgm");
-    fp->read(im1);
-//     FileHandler fp("file://cmm.ensmp.fr/~faessel/smil/images/lena.png", ios_base::binary);
-    
-//     istream &is = fp.getStream();
-    cout << fp->typeIsAvailable() << endl;
-//     std::move(is);
-  
-    delete fp;
-    
-    TestSuite ts;
+   TestSuite ts;
 
+    ADD_TEST(ts, Test_BMP);
     ADD_TEST(ts, Test_RW_RAW);
     ADD_TEST(ts, Test_NetPBM);
     

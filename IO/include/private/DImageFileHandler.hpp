@@ -143,8 +143,8 @@ namespace smil
               return RES_OK;
         }
         
-        virtual RES_T readData(Image<T> &image) = 0;
-        virtual RES_T writeData(const Image<T> &image) =  0;
+        virtual RES_T readData(Image<T> &image) { return RES_ERR_NOT_IMPLEMENTED; }
+        virtual RES_T writeData(const Image<T> &image) { return RES_ERR_NOT_IMPLEMENTED; }
         
         virtual RES_T read(BaseImage &image) 
         {
@@ -175,13 +175,17 @@ namespace smil
             
             ASSERT(readHeader(image)==RES_OK)
             ASSERT(readData(image)==RES_OK)
+            image.modified();
+            
+            if (this->_open)
+              this->close();
             
             return RES_OK;
             
         }
         virtual RES_T read(iostream &fp, Image<T> &image) 
         {
-            this->stream = &fp;
+            this->setStream(fp);
             return read(image);
         }
         virtual RES_T read(const char *fileName, Image<T> &image)
@@ -221,11 +225,14 @@ namespace smil
             ASSERT(writeHeader(image)==RES_OK)
             ASSERT(writeData(image)==RES_OK)
             
+            if (this->_open)
+              this->close();
+            
             return RES_OK;
         }
         virtual RES_T write(const Image<T> &image, iostream &fp) 
         {
-            this->stream = &fp;
+            this->setStream(fp);
             return write(image);
         }
         virtual RES_T write(const Image<T> &image, const char *fileName)

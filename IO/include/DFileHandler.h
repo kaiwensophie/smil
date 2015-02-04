@@ -54,6 +54,7 @@ namespace smil
         bool isOpen() { return _open; }
         
         iostream &getStream() { return *stream; }
+        void setStream(iostream &str);
         
         string fileName;
         string fileExtension;

@@ -88,6 +88,12 @@ namespace smil
         return RES_OK;
     }
     
+    void FileHandler::setStream(iostream &str)
+    {
+        close();
+        stream = &str;
+    }
+    
     void FileHandler::close()
     {
         if (!_open)
@@ -99,6 +105,7 @@ namespace smil
           stream = NULL;
         }
         
+        fileName = "";
         _open = false;
     }
 } // namespace smil
