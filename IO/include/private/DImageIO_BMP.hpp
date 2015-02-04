@@ -61,6 +61,7 @@ namespace smil
         virtual RES_T writeHeader(const Image<T> &image=NULL)
         {
             ASSERT(ImageFileHandler<T>::writeHeader(image)==RES_OK) // Get header infos from image
+            
             return writeBMPHeader(this->header, this->getStream());
         }
         
@@ -68,7 +69,8 @@ namespace smil
     };
 
     template <class T>
-    class BMP_FileHandler<T, ENABLE_IF( IS_SAME(T, UINT8) || IS_SAME(T, RGB) , T )> : public BMP_FileHandler<T,void>
+    class BMP_FileHandler<T, ENABLE_IF( IS_SAME(T, UINT8) || IS_SAME(T, RGB) , T )>
+        : public BMP_FileHandler<T,void>
     {
       public:
         virtual bool typeIsAvailable() { return true; }

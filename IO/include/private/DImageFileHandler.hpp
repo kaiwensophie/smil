@@ -32,6 +32,7 @@
 
 
 #include "IO/include/DFileHandler.h"
+#include "Core/include/private/DTraits.hpp"
 
 
 
@@ -98,6 +99,21 @@ namespace smil
             dataStartPos = 0;
         }
     };
+    
+    template <>
+    inline RES_T ImageFileHeader::getFromImage<RGB>(const Image<RGB> &image)
+    {
+        channels = 3;
+        colorType = COLOR_TYPE_RGB;
+        scalarType = DtUINT8;
+        fileType = FILE_TYPE_BINARY;
+        width = image.getWidth();
+        height = image.getHeight();
+        depth = image.getDepth();
+        dataStartPos = 0;
+        
+        return RES_OK;
+    }
     
     class BaseImageFileHandler : public FileHandler
     {

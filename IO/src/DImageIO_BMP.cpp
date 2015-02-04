@@ -134,9 +134,6 @@ namespace smil
         fHeader.bfType = 0x4D42;
         fHeader.bfReserved1 = 0;
         fHeader.bfReserved2 = 0;
-        fHeader.bfOffBits = sizeof(bmpFileHeader) + sizeof(bmpInfoHeader) + nColors*4;
-        
-        
 
         iHeader.biSize = sizeof(bmpInfoHeader);  // number of bytes required by the struct
         iHeader.biWidth = (UINT32)width;  // width in pixels
@@ -147,10 +144,13 @@ namespace smil
         {
             int scanlineSize = (width%4==0) ? width : (width-width%4)+4;
             fHeader.bfSize = fHeader.bfOffBits + UINT32(scanlineSize*height);
+            fHeader.bfOffBits = sizeof(bmpFileHeader) + sizeof(bmpInfoHeader) + nColors*4;
             iHeader.biBitCount = 8; // number of bit per pixel
         }
         else if (header.colorType==ImageFileHeader::COLOR_TYPE_RGB)
         {
+            fHeader.bfSize = (UINT32)(width*height*3*sizeof(UINT8)) + sizeof(bmpFileHeader) + sizeof(bmpInfoHeader);
+            fHeader.bfOffBits = sizeof(bmpFileHeader) + sizeof(bmpInfoHeader);
             iHeader.biBitCount = 24; // number of bit per pixel
         }
           

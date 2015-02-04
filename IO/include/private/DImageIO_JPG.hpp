@@ -30,69 +30,62 @@
 #ifndef _D_IMAGE_IO_JPG_H
 #define _D_IMAGE_IO_JPG_H
 
+#include <fstream>
+#include <iostream> 
+#include <jpeglib.h>
 
-#include <iostream>
-
-#include "Core/include/private/DTypes.hpp"
-#include "Core/include/DCommon.h"
-#include "Core/include/DErrors.h"
-
-
-using namespace std;
-
-
-#ifdef USE_JPEG
-
+#include "IO/include/private/DImageIO.hpp"
+#include "Core/include/private/DImage.hpp"
 
 namespace smil
 {
-  
     /** 
     * \addtogroup IO
     */
     /*@{*/
     
-    RES_T getJPGFileInfo(const char* filename, ImageFileInfo &fInfo);
-
-    template <class T> class Image;
-
-    template <class T=void>
-    class JPGImageFileHandler : public ImageFileHandler<T>
+    
+    RES_T readJPGHeader(istream &fp, ImageFileHeader &header, jpeg_decompress_struct &cinfo, bool keepAlive);
+    RES_T writeJPGHeader(ImageFileHeader &header, jpeg_compress_struct &cinfo, ostream &fp, bool keepAlive);
+    
+    template <class T, typename Enable=T>
+    class JPG_FileHandler : public ImageFileHandler<T>
     {
       public:
-        JPGImageFileHandler()
-          : ImageFileHandler<T>("JPG")
+        
+        virtual RES_T readHeader(Image<T> &image=NULL)
         {
+            ASSERT(readJPGHeader(this->getStream(), this->header, decomp_cinfo, this->typeIsAvailable())==RES_OK)
+            
+            return ImageFileHandler<T>::readHeader(image); // Apply header to image
+        }
+        virtual RES_T writeHeader(const Image<T> &image=NULL)
+        {
+            ASSERT(ImageFileHandler<T>::writeHeader(image)==RES_OK) // Get header infos from image
+            
+            return writeJPGHeader(this->header, comp_cinfo, this->getStream(), this->typeIsAvailable());
         }
         
-        virtual RES_T getFileInfo(const char* filename, ImageFileInfo &fInfo)
-        {
-            return getJPGFileInfo(filename, fInfo);
-        }
-        
-        virtual RES_T read(const char* filename, Image<T> &image)
-        {
-            return ImageFileHandler<T>::read(filename, image);
-        }
-        virtual RES_T write(const Image<T> &image, const char* filename)
-        {
-            return ImageFileHandler<T>::write(image, filename);
-        }
+        jpeg_decompress_struct decomp_cinfo;
+        jpeg_compress_struct comp_cinfo;
+        struct jpeg_error_mgr err_mgr;
     };
 
-    // Specializations
-    template <>
-    RES_T JPGImageFileHandler<RGB>::read(const char *filename, Image<RGB> &image);
-    template <>
-    RES_T JPGImageFileHandler<RGB>::write(const Image<RGB> &image, const char *filename);
+    template <class T>
+    class JPG_FileHandler<T, ENABLE_IF( IS_SAME(T, RGB) , T )>
+        : public JPG_FileHandler<T,void>
+    {
+      public:
+        virtual bool typeIsAvailable() { return true; }
 
+        virtual RES_T readData(Image<T> &image);
+        virtual RES_T writeData(const Image<T> &image);
+    };    
+    
+    
 /*@}*/
 
 } // namespace smil
-
-
-#endif // USE_JPEG
-
 
 
 #endif // _D_IMAGE_IO_JPG_H

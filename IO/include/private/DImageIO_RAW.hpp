@@ -46,53 +46,53 @@ namespace smil
     */
     /*@{*/
   
+    template <class T>
+    RES_T readRAW(istream &fp, size_t width, size_t height, size_t depth, Image<T> &image)
+    {
+        ASSERT(image.setSize(width, height, depth), RES_ERR)
+
+        fp.read((char*)image.getVoidPointer(), sizeof(T)*image.getPixelCount());
+        image.modified();
+        
+        return RES_OK;
+    }
+    
     /**
     * RAW file read 
     */
     template <class T>
     RES_T readRAW(const char *filename, size_t width, size_t height, size_t depth, Image<T> &image)
     {
-        FILE *fp = NULL;
+        ifstream fp(filename, ios_base::binary);
 
-        /* open image file */
-        fp = fopen (filename, "rb");
-        
-        ASSERT(fp, "Error: couldn't open file", RES_ERR_IO);
+        ASSERT(fp.is_open(), "Error: couldn't open file", RES_ERR_IO)
 
-
-        image.setSize(width, height, depth);
-    //   image->allocate();
-
-        size_t ret = fread(image.getVoidPointer(), sizeof(T), image.getPixelCount(), fp);
-        if (ret==0)
-        {
-            fprintf (stderr, "error reading \"%s\"!\n", filename);
-            return RES_ERR;
-        }
-        
-        fclose (fp);
-
-        image.modified();
+        readRAW<T>(fp, width, height, depth, image);
+        fp.close();
         
         return RES_OK;
     }
 
+    template <class T>
+    RES_T writeRAW(Image<T> &image, ostream &fp)
+    {
+        fp.write((char*)image.getVoidPointer(), sizeof(T)*image.getPixelCount());
+        
+        return RES_OK;
+    }
+    
     /**
     * RAW file write
     */
     template <class T>
     RES_T writeRAW(Image<T> &image, const char *filename)
     {
-        FILE *fp = NULL;
+        ofstream fp(filename, ios_base::binary);
 
-        /* open image file */
-        fp = fopen (filename, "wb");
-        
-        ASSERT(fp, "Error: couldn't open file", RES_ERR_IO);
+        ASSERT(fp.is_open(), "Error: couldn't open file", RES_ERR_IO)
 
-        fwrite(image.getVoidPointer(), sizeof(T), image.getPixelCount(), fp);
-
-        fclose (fp);
+        writeRAW<T>(image, fp);
+        fp.close();
         
         return RES_OK;
     }

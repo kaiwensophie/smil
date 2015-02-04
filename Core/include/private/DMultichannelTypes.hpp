@@ -46,7 +46,7 @@ namespace smil
     
 //     template <class T, UINT N>
 //     class VirtualMultichannelType
-    template <class T, UINT N>
+    template <class T, UINT N=3>
     class MultichannelType
     {
     protected:
