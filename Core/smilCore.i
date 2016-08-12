@@ -329,7 +329,7 @@ namespace smil
 
 
 
-
+#ifndef SWIGXML
 #ifndef SMIL_WRAP_UINT32
     %template(Vector_Edge_UINT) std::vector< Edge<UINT,UINT> >;
     TEMPLATE_WRAP_CLASS_2T_SUBTYPES_FIX_FIRST(std::vector, Edge, UINT, Vector);
@@ -339,7 +339,7 @@ namespace smil
 %include "Core/include/private/DGraph.hpp"
 
 
-#ifndef SWIGXML
+
     
     // Base UINT Edge
     TEMPLATE_WRAP_CLASS_2T_CROSS(smil::Edge, Edge);
@@ -353,7 +353,7 @@ namespace smil
     
 #endif // SMIL_WRAP_UINT32
 
-#endif // SWIGXML
+
 
 namespace smil
 {
@@ -372,7 +372,7 @@ namespace smil
     #endif
 
 }
-
+#endif // SWIGXML
 
 
 //////////////////////////////////////////////////////////
